@@ -1,4 +1,4 @@
-/* Aerospace service worker.
+/* AmericanAirlines service worker.
  *
  * Deliberately dependency-free and conservative:
  *  - the app shell is precached so the app opens offline
@@ -9,8 +9,8 @@
  * Bump VERSION to invalidate every cache after changing the strategy.
  */
 const VERSION = "v1";
-const SHELL_CACHE = `aerospace-shell-${VERSION}`;
-const RUNTIME_CACHE = `aerospace-runtime-${VERSION}`;
+const SHELL_CACHE = `AmericanAirlines-shell-${VERSION}`;
+const RUNTIME_CACHE = `AmericanAirlines-runtime-${VERSION}`;
 
 const SHELL_ASSETS = [
   "/",

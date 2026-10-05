@@ -84,7 +84,7 @@ const describeInstall = (env) => {
   if (env.isIos && !env.isSafari) {
     return {
       device: "phone",
-      title: "Add Aerospace to your Home Screen",
+      title: "Add American Airlines to your Home Screen",
       intro:
         "You are in a browser that cannot add Home Screen apps. On iPhone and iPad every browser is built on Safari, so open this page in Safari and add it from there.",
       steps: [
@@ -99,13 +99,13 @@ const describeInstall = (env) => {
   if (env.isIos) {
     return {
       device: "phone",
-      title: "Add Aerospace to your Home Screen",
+      title: "Add American Airlines to your Home Screen",
       intro:
         "Safari installs apps from the Share menu, so there is no button we can press for you. Two taps and it behaves like any app on your phone.",
       steps: [
         step(IosShareIcon, "Tap the Share button in Safari's toolbar."),
         step(AddBoxOutlinedIcon, "Scroll the menu and tap Add to Home Screen."),
-        step(DownloadDoneIcon, "Tap Add — the Aerospace icon appears on your Home Screen."),
+        step(DownloadDoneIcon, "Tap Add — the American Airlines icon appears on your Home Screen."),
       ],
     };
   }
@@ -113,12 +113,12 @@ const describeInstall = (env) => {
   if (env.isAndroid && env.isSamsung) {
     return {
       device: "phone",
-      title: "Install Aerospace on your phone",
+      title: "Install American Airlines on your phone",
       intro: "Samsung Internet installs apps from its own menu.",
       steps: [
         step(MoreVertIcon, "Tap the ☰ menu at the bottom right."),
         step(AddBoxOutlinedIcon, "Tap Add page to → Home screen."),
-        step(DownloadDoneIcon, "Tap Add — Aerospace lands in your app drawer."),
+        step(DownloadDoneIcon, "Tap Add — American Airlines lands in your app drawer."),
       ],
     };
   }
@@ -126,26 +126,26 @@ const describeInstall = (env) => {
   if (env.isAndroid && env.isFirefox) {
     return {
       device: "phone",
-      title: "Add Aerospace to your Home Screen",
+      title: "Add American Airlines to your Home Screen",
       intro: "Firefox adds a shortcut to the page, not a full app.",
       steps: [
         step(MoreVertIcon, "Tap the ⋮ menu in Firefox."),
         step(AddBoxOutlinedIcon, "Tap Add to Home screen."),
       ],
-      note: "For the full app — its own window, offline boarding pass, no browser bar — open Aerospace in Chrome instead.",
+      note: "For the full app — its own window, offline boarding pass, no browser bar — open American Airlines in Chrome instead.",
     };
   }
 
   if (env.isAndroid) {
     return {
       device: "phone",
-      title: "Install Aerospace on your phone",
+      title: "Install American Airlines on your phone",
       intro:
         "Chrome and Edge install this as a real Android app, no Play Store involved.",
       steps: [
         step(MoreVertIcon, "Tap the ⋮ menu at the top right."),
         step(AddBoxOutlinedIcon, "Tap Install app or Add to Home screen."),
-        step(DownloadDoneIcon, "Confirm — Aerospace joins your app drawer and Home Screen."),
+        step(DownloadDoneIcon, "Confirm — American Airlines joins your app drawer and Home Screen."),
       ],
     };
   }
@@ -153,14 +153,14 @@ const describeInstall = (env) => {
   if (env.isMac && env.isSafari) {
     return {
       device: "desktop",
-      title: "Add Aerospace to your Dock",
+      title: "Add American Airlines to your Dock",
       intro: "Safari keeps web apps in the Dock, beside your other apps.",
       steps: [
         step(DesktopWindowsIcon, "Open the File menu in Safari."),
         step(AddBoxOutlinedIcon, "Choose Add to Dock."),
-        step(DownloadDoneIcon, "Click Add — Aerospace opens in its own window."),
+        step(DownloadDoneIcon, "Click Add — American Airlines opens in its own window."),
       ],
-      note: "Add to Dock needs macOS Sonoma or newer. On older Macs, open Aerospace in Chrome or Edge to install it.",
+      note: "Add to Dock needs macOS Sonoma or newer. On older Macs, open American Airlines in Chrome or Edge to install it.",
     };
   }
 
@@ -168,7 +168,7 @@ const describeInstall = (env) => {
   if (env.isFirefox && !env.isAndroid) {
     return {
       device: "desktop",
-      title: "Install Aerospace on this computer",
+      title: "Install American Airlines on this computer",
       intro: "Firefox cannot install web apps.",
       steps: [
         step(OpenInNewIcon, "Open this site in Chrome, Edge or Safari."),
@@ -179,15 +179,15 @@ const describeInstall = (env) => {
   }
 
   const finishStep = env.isWindows
-    ? "Click Install — Aerospace is added to your Start Menu and can be pinned to the taskbar."
+    ? "Click Install — American Airlines is added to your Start Menu and can be pinned to the taskbar."
     : env.isMac
-      ? "Click Install — Aerospace is added to your Applications folder and Dock."
-      : "Click Install — Aerospace is added to your desktop app launcher.";
+      ? "Click Install — American Airlines is added to your Applications folder and Dock."
+      : "Click Install — American Airlines is added to your desktop app launcher.";
 
   if (env.isEdge) {
     return {
       device: "desktop",
-      title: "Install Aerospace on this computer",
+      title: "Install American Airlines on this computer",
       intro: "Edge turns the site into a desktop app in its own window.",
       steps: [
         step(AddBoxOutlinedIcon, "Click the app icon in the address bar, or open ⋮ → Apps → Install this site as an app."),
@@ -198,7 +198,7 @@ const describeInstall = (env) => {
 
   return {
     device: "desktop",
-    title: "Install Aerospace on this computer",
+    title: "Install American Airlines on this computer",
     intro: "Click the install icon in the address bar, or open the browser menu.",
     steps: [
       step(AddBoxOutlinedIcon, "Click the install icon at the right of the address bar."),
@@ -401,7 +401,7 @@ const InstallAppButton = ({ fullWidth = false, sx = {} }) => {
         open={justInstalled}
         autoHideDuration={6000}
         onClose={() => setJustInstalled(false)}
-        message="Aerospace is installed — open it from your Home Screen, Dock or Start Menu."
+        message="American Airlines is installed — open it from your Home Screen, Dock or Start Menu."
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         ContentProps={{ sx: { bgcolor: "primary.main", borderRadius: 2 } }}
       />

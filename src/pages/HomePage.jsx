@@ -1025,7 +1025,7 @@ const HomePage = () => {
               fontSize: { xs: "1.6rem", sm: "1.8rem", md: "2rem", lg: "2.2rem" }
             }}
           >
-            Why Choose Aerospace?
+            Why Choose American Airlines?
           </Typography>
           <Grid 
             container 

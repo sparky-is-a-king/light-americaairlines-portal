@@ -32,7 +32,7 @@ import { execFileSync } from "node:child_process";
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
-const DEFAULT_TARGET = "https://aerospace-omega.vercel.app";
+const DEFAULT_TARGET = "https://light-americanairlines-portal.vercel.app";
 const ENTRY_CHUNK = /assets\/index-[A-Za-z0-9_.-]+\.js/;
 
 /**
@@ -267,7 +267,7 @@ async function main() {
     console.log("  Next steps:");
     console.log("    • wait ~1–2 min for the deployment to finish, then re-run");
     console.log("    • rebuild locally:  npm run verify:deploy -- --build");
-    console.log("    • list deployments: vercel ls aerospace");
+    console.log("    • list deployments: vercel ls American Airlines");
     code = 1;
   } else if (contentMatches === false) {
     console.log("\n✖ MISMATCH — chunk names match but their contents differ.");

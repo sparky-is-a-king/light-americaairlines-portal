@@ -232,14 +232,14 @@ export default function Register() {
                     }}
                   />
                   <Typography variant="h2" sx={{ color: "white", fontWeight: 800, fontSize: "3rem" }}>
-                    AeroSpace
+                    American Airlines
                   </Typography>
                 </Box>
                 <Typography variant="h4" sx={{ color: "white", fontWeight: 600, mb: 3, fontSize: "2rem" }}>
                   Join Our Community!
                 </Typography>
                 <Typography variant="body1" sx={{ color: alpha("#fff", 0.8), mb: 4, fontSize: "1.1rem" }}>
-                  Create your account to access exclusive flight deals, track your journeys, and experience premium aerospace services.
+                  Create your account to access exclusive flight deals, track your journeys, and experience premium American Airlines services.
                 </Typography>
                 <Box sx={{ display: "flex", justifyContent: "center", gap: 4, mt: 4 }}>
                   {[
@@ -323,7 +323,7 @@ export default function Register() {
                   }}
                 />
                 <Typography variant={isMobile ? "h5" : "h4"} sx={{ color: "#0a2a5a", fontWeight: 800 }}>
-                  AeroSpace
+                  American Airlines
                 </Typography>
               </Box>
 

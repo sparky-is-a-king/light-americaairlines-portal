@@ -1,6 +1,6 @@
 {
-  "name": "Aerospace — Flights, Boarding Passes & Tracking",
-  "short_name": "Aerospace",
+  "name": "American Airlines — Flights, Boarding Passes & Tracking",
+  "short_name": "American Airlines",
   "description": "Book flights, track them live and carry your boarding pass on any device.",
   "start_url": "/",
   "scope": "/",

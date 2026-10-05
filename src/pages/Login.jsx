@@ -198,14 +198,14 @@ export default function Login() {
                     }}
                   />
                   <Typography variant="h2" sx={{ color: "white", fontWeight: 800, fontSize: "3rem" }}>
-                    AeroSpace
+                    American Airlines
                   </Typography>
                 </Box>
                 <Typography variant="h4" sx={{ color: "white", fontWeight: 600, mb: 3, fontSize: "2rem" }}>
                   Welcome Back!
                 </Typography>
                 <Typography variant="body1" sx={{ color: alpha("#fff", 0.8), mb: 4, fontSize: "1.1rem" }}>
-                  Access your dashboard, manage flights, and track your aerospace operations with our secure enterprise platform.
+                  Access your dashboard, manage flights, and track your American Airlines operations with our secure enterprise platform.
                 </Typography>
                 <Box sx={{ display: "flex", justifyContent: "center", gap: 4, mt: 4 }}>
                   {[
@@ -289,7 +289,7 @@ export default function Login() {
                   }}
                 />
                 <Typography variant={isMobile ? "h5" : "h4"} sx={{ color: "#0a2a5a", fontWeight: 800 }}>
-                  AeroSpace
+                  American Airlines
                 </Typography>
               </Box>
 

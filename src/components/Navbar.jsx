@@ -128,7 +128,7 @@ const Navbar = () => {
         }}
       >
         <FlightTakeoffIcon />
-        Aerospace
+        American Airlines
       </Typography>
       
       {/* Language selector in drawer */}
@@ -215,7 +215,7 @@ const Navbar = () => {
           >
             <FlightTakeoffIcon />
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              Aerospace
+              American Airlines
             </Typography>
           </Box>
 
