@@ -63,10 +63,10 @@ const WENDY_FLIGHT = {
   passenger_name: 'Wendy Lupastean',
   ticket_number: 'AA173-001',
   seat: '23A',
-  baggage: '1 carry-on, 1 checked',
+  baggage: '4 luggage box',
   gate_departure: 'Gate B44',
   gate_arrival: 'Terminal 2',
-  total_price: '1580.00',
+  total_price: '1209.00',
   currency: '$',
   trip_type: 'ONE WAY',
   passport_status: 'Verified',
@@ -503,8 +503,8 @@ const BoardingPass = () => {
   const passengerName = flight.passenger_name;
   const ticket = flight.ticket_number;
   const seat = flight.seat;
-  // Baggage for the passport-processing ticket is 4 box 1.
-  const baggage = passportProcessing ? "4 box 1" : flight.baggage;
+  // Baggage for the passport-processing ticket is 4 luggage box.
+  const baggage = passportProcessing ? "4 luggage box" : flight.baggage;
   const flightDate = formatDate(flight.flight_date);
   const flightWeekday = formatWeekday(flight.flight_date);
   // ---------- Money ----------
