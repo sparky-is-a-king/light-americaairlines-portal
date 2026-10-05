@@ -1,0 +1,2 @@
+Go to superbase create new user login
+use sql editor code to change the flight details

@@ -1,0 +1,48 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  /* clip, not hidden: hidden makes body a scroll container, which grows its own
+     17px scrollbar (so every page is narrower than the viewport) while html stops
+     scrolling the content at all. clip just clips. */
+  overflow-x: clip;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8fafc;
+}
+
+#root {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  /* clip, not hidden: overflow:hidden makes #root a scroll container (CSS forces
+     overflow-y to auto), so it grows its own scrollbar and every page inside it
+     loses ~17px of width and sits off-centre. clip simply clips. */
+  overflow-x: clip !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  min-height: 100vh !important;
+}
+
+/* Ensure all content containers are centered */
+.container-center {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
