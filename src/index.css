@@ -102,6 +102,28 @@ body {
   height: 100%;
   text-align: center;
 }
+
+/* React Bits integrations (CLI-installed) ---- */
+
+/* GradientText wraps the booking heading; it isn't interactive, so drop
+   the pointer cursor and backdrop blur the demo styles apply. */
+.animated-gradient-text.booking-gradient-heading {
+  cursor: default;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* AnimatedContent wraps each feature card; stretch it so the row of
+   SpotlightCards still matches heights inside the Grid item. */
+.features-reveal {
+  height: 100%;
+}
+
+/* GlareHover around destination photos: cards aren't clickable, so keep
+   the default cursor (beats .glare-hover:hover on specificity). */
+.glare-hover.dest-glare:hover {
+  cursor: default;
+}
 @media (min-width: 900px) {
   .hero-title {
     justify-content: flex-end;

@@ -24,6 +24,12 @@ import CountUp from "../components/reactbits/CountUp";
 import Reveal from "../components/reactbits/Reveal";
 import SpotlightCard from "../components/reactbits/SpotlightCard";
 import StarBorder from "../components/reactbits/StarBorder";
+import AnimatedContent from "../components/reactbits/AnimatedContent";
+import SplitText from "../components/reactbits/SplitText";
+import GradientText from "../components/reactbits/GradientText";
+import ShinyText from "../components/reactbits/ShinyText";
+import GlareHover from "../components/reactbits/GlareHover";
+import DecryptedText from "../components/reactbits/DecryptedText";
 import {
   FlightTakeoff,
   FlightLand,
@@ -404,16 +410,43 @@ const HomePage = () => {
                     fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.875rem" },
                     textShadow: "0 2px 4px rgba(0,0,0,0.3)"
                   }}>
-                    ⭐ 4.9/5 RATED BY 50K+ TRAVELERS
+                    <ShinyText
+                      text="⭐ 4.9/5 RATED BY 50K+ TRAVELERS"
+                      color="#FFFFFF"
+                      shineColor="#FFD700"
+                      speed={3.5}
+                      className="hero-shiny"
+                    />
                   </Typography>
                   <Star sx={{ color: "#FFD700", fontSize: { xs: 14, sm: 16 } }} />
                 </Box>
               </Grow>
 
               {/* Main Heading — React Bits BlurText (word-by-word blur reveal) */}
-              <Box sx={{ mb: { xs: 2, sm: 3 } }}>
-                <BlurText text="Elevate Your" delay={150} className="hero-title" />
-                <BlurText text="Journey Experience" delay={300} className="hero-title hero-title-gold" />
+              <Box sx={{ mb: { xs: 2, sm: 3 }, textAlign: { xs: "center", md: "right" } }}>
+                {/* React Bits SplitText — GSAP per-character reveal */}
+                <SplitText
+                  text="Elevate Your"
+                  className="hero-title"
+                  tag="div"
+                  textAlign="inherit"
+                  splitType="chars"
+                  delay={22}
+                  duration={0.9}
+                  from={{ opacity: 0, y: 30, scale: 0.9 }}
+                  to={{ opacity: 1, y: 0, scale: 1 }}
+                />
+                <SplitText
+                  text="Journey Experience"
+                  className="hero-title hero-title-gold"
+                  tag="div"
+                  textAlign="inherit"
+                  splitType="chars"
+                  delay={22}
+                  duration={0.9}
+                  from={{ opacity: 0, y: 30, scale: 0.9 }}
+                  to={{ opacity: 1, y: 0, scale: 1 }}
+                />
               </Box>
 
               {/* Subtitle */}
@@ -660,18 +693,24 @@ const HomePage = () => {
           width: "100%",
         }}
       >
-        <Typography
-          variant="h4"
-          sx={{
-            mb: { xs: 3, sm: 4 },
-            textAlign: "center",
-            color: "#0d47a1",
-            fontWeight: 700,
-            fontSize: { xs: "1.6rem", sm: "1.8rem", md: "2rem", lg: "2.2rem" }
-          }}
-        >
-          Book Your Flight
-        </Typography>
+        <Box sx={{ mb: { xs: 3, sm: 4 }, display: "flex", justifyContent: "center" }}>
+          {/* React Bits GradientText — animated gradient sweep on the heading */}
+          <GradientText
+            colors={["#0D47A1", "#1976D2", "#FFC107", "#1976D2", "#0D47A1"]}
+            animationSpeed={6}
+            className="booking-gradient-heading"
+          >
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                fontSize: { xs: "1.6rem", sm: "1.8rem", md: "2rem", lg: "2.2rem" }
+              }}
+            >
+              Book Your Flight
+            </Typography>
+          </GradientText>
+        </Box>
 
         <Box
           component="form"
@@ -802,14 +841,25 @@ const HomePage = () => {
                 color: "#1e293b", 
                 fontSize: { xs: "1.5rem", sm: "1.8rem", md: "2rem", lg: "2.2rem" } 
               }}>
-                Popular Destinations Worldwide
+                <DecryptedText
+                  text="Popular Destinations Worldwide"
+                  animateOn="view"
+                  speed={45}
+                  maxIterations={8}
+                  characters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                />
               </Typography>
               <Typography variant="body1" sx={{ 
                 color: "#64748b", 
                 mt: 1,
                 fontSize: { xs: "0.875rem", sm: "1rem" }
               }}>
-                Discover amazing flight deals across the globe
+                <ShinyText
+                  text="Discover amazing flight deals across the globe"
+                  color="#64748B"
+                  shineColor="#0D47A1"
+                  speed={3.5}
+                />
               </Typography>
             </Box>
             <Button 
@@ -846,19 +896,35 @@ const HomePage = () => {
                   }
                 }}>
                   <Box sx={{ position: "relative" }}>
-                    <CardMedia
-                      component="img"
-                      height="180"
-                      image={dest.image}
-                      alt={dest.city}
-                      sx={{ 
-                        transition: "transform 0.3s ease",
-                        height: { xs: 160, sm: 180 },
-                        '&:hover': {
-                          transform: "scale(1.1)"
-                        }
-                      }}
-                    />
+                    {/* React Bits GlareHover — light sweep across the photo */}
+                    <GlareHover
+                      className="dest-glare"
+                      width="100%"
+                      height="auto"
+                      background="transparent"
+                      borderRadius="0px"
+                      borderColor="transparent"
+                      glareColor="#FFFFFF"
+                      glareOpacity={0.45}
+                      glareSize={220}
+                      transitionDuration={600}
+                    >
+                      <CardMedia
+                        component="img"
+                        height="180"
+                        image={dest.image}
+                        alt={dest.city}
+                        sx={{ 
+                          transition: "transform 0.3s ease",
+                          height: { xs: 160, sm: 180 },
+                          width: "100%",
+                          display: "block",
+                          '&:hover': {
+                            transform: "scale(1.08)"
+                          }
+                        }}
+                      />
+                    </GlareHover>
                     <Box sx={{ 
                       position: "absolute", 
                       top: 12, 
@@ -1041,6 +1107,14 @@ const HomePage = () => {
           >
             {features.map((feature, index) => (
               <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
+                {/* React Bits AnimatedContent — staggered scroll-in per card */}
+                <AnimatedContent
+                  distance={60}
+                  duration={0.7}
+                  delay={index * 0.08}
+                  threshold={0.15}
+                  className="features-reveal"
+                >
                 <SpotlightCard
                   className="feature-card"
                   spotlightColor="rgba(13, 71, 161, 0.18)"
@@ -1066,6 +1140,7 @@ const HomePage = () => {
                     {feature.desc}
                   </Typography>
                 </SpotlightCard>
+                </AnimatedContent>
               </Grid>
             ))}
           </Grid>
