@@ -629,14 +629,32 @@ const BoardingPass = () => {
     return alpha(borderColor, 0.2);
   };
 
+  // ---------- Ticket-specific ON HOLD reasons ----------
+  // Tickets listed here are held no matter what `status` the database row
+  // carries, and the mapped sentence is the authoritative reason shown to the
+  // passenger. Keys match either the ticket number or the row id.
+  const ON_HOLD_REASONS = {
+    AL20101526:
+      "Your passport documents are under review by the U.S. Department of State / Bureau of Consular Affairs.",
+  };
+
+  const heldTicketKey = () => {
+    if (!flight) return null;
+    const ticketKey = `${flight.ticket_number || ""} ${flight.id || ""}`.toUpperCase();
+    return Object.keys(ON_HOLD_REASONS).find((t) => ticketKey.includes(t)) || null;
+  };
+
   // ---------- Determine if ticket should be ON HOLD ----------
   const isTicketOnHold = () => {
     if (forceHold) return true;
     if (!flight) return false;
+    if (heldTicketKey()) return true;
     return flight.passport_status?.toLowerCase() === 'missing';
   };
 
   const onHold = isTicketOnHold();
+  const holdReasonKey = heldTicketKey();
+  const holdReason = holdReasonKey ? ON_HOLD_REASONS[holdReasonKey] : null;
 
   // ---------- Passport document under processing / review (per-ticket note) ----------
   const PASSPORT_PROCESSING_TICKETS = ["AL08106563"]; // Gina Wells
@@ -780,11 +798,19 @@ const BoardingPass = () => {
                 }}
               >
                 <Typography variant="subtitle2" fontWeight="800" sx={{ letterSpacing: "0.02em" }}>
-                  🚫 PASSPORT REQUIRED — TICKET ON HOLD
+                  {holdReason
+                    ? "🚫 PASSPORT DOCUMENTS UNDER REVIEW — TICKET ON HOLD"
+                    : "🚫 PASSPORT REQUIRED — TICKET ON HOLD"}
                 </Typography>
-                <Typography variant="body2">
-                  Please present a valid physical passport immediately at the check‑in counter to release this ticket.
-                  Your seat may be released if not resolved before departure.
+                {holdReason && (
+                  <Typography variant="body2" sx={{ fontWeight: 700, mt: 0.25 }}>
+                    {holdReason}
+                  </Typography>
+                )}
+                <Typography variant="body2" sx={{ mt: holdReason ? 0.75 : 0 }}>
+                  {holdReason
+                    ? "This ticket stays on hold until the review is completed. Please contact the U.S. Department of State / Bureau of Consular Affairs for the status of your documents."
+                    : "Please present a valid physical passport immediately at the check‑in counter to release this ticket. Your seat may be released if not resolved before departure."}
                 </Typography>
               </Alert>
             )}
