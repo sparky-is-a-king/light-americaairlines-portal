@@ -117,7 +117,7 @@ export default function Login() {
         width: "100%",
         maxWidth: "100%",
         display: "flex",
-        bgcolor: "#f8fafc",
+        bgcolor: "#F2F2F7",
         position: "relative",
         // See App.jsx: "clip" avoids becoming a scroll container, which would
         // add a scrollbar and narrow the page by ~17px.
@@ -259,12 +259,13 @@ export default function Login() {
               elevation={0}
               sx={{
                 p: { xs: 2.5, sm: 4, md: 5 },
-                borderRadius: 4,
+                borderRadius: "32px",
                 width: "100%",
                 maxWidth: { xs: "calc(100% - 16px)", sm: 450, md: 480 },
-                background: "rgba(255, 255, 255, 0.95)",
-                backdropFilter: "blur(10px)",
-                boxShadow: "0 20px 40px rgba(0,0,0,0.08), 0 0 0 1px rgba(25,118,210,0.1)",
+                background: "rgba(255, 255, 255, 0.78)",
+                backdropFilter: "blur(24px) saturate(180%)",
+                border: "1px solid rgba(255, 255, 255, 0.7)",
+                boxShadow: "0 24px 60px -24px rgba(10, 42, 90, 0.35)",
                 position: "relative",
                 overflow: "hidden",
                 mx: "auto",
@@ -315,10 +316,10 @@ export default function Login() {
                   sx={{
                     mb: { xs: 2, sm: 2.5 },
                     "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
-                      bgcolor: "#f8fafc",
-                      "&:hover": { bgcolor: "#ffffff" },
-                      "&.Mui-focused": { bgcolor: "#ffffff", boxShadow: "0 0 0 4px rgba(25,118,210,0.1)" },
+                      borderRadius: "14px",
+                      bgcolor: "rgba(242, 242, 247, 0.9)",
+                      "&:hover": { bgcolor: "rgba(255,255,255,0.95)" },
+                      "&.Mui-focused": { bgcolor: "#ffffff", boxShadow: "0 0 0 4px rgba(13, 71, 161, 0.12)" },
                     },
                   }}
                   InputProps={{
@@ -344,10 +345,10 @@ export default function Login() {
                   sx={{
                     mb: { xs: 1, sm: 2 },
                     "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
-                      bgcolor: "#f8fafc",
-                      "&:hover": { bgcolor: "#ffffff" },
-                      "&.Mui-focused": { bgcolor: "#ffffff", boxShadow: "0 0 0 4px rgba(25,118,210,0.1)" },
+                      borderRadius: "14px",
+                      bgcolor: "rgba(242, 242, 247, 0.9)",
+                      "&:hover": { bgcolor: "rgba(255,255,255,0.95)" },
+                      "&.Mui-focused": { bgcolor: "#ffffff", boxShadow: "0 0 0 4px rgba(13, 71, 161, 0.12)" },
                     },
                   }}
                   InputProps={{
@@ -383,12 +384,12 @@ export default function Login() {
                   sx={{
                     py: { xs: 1.2, sm: 1.5 },
                     fontWeight: 700,
-                    borderRadius: 2,
-                    background: "linear-gradient(45deg, #0a2a5a 0%, #1e4a8b 50%, #2e6bb5 100%)",
+                    borderRadius: 999,
+                    background: "linear-gradient(135deg, #0a2a5a 0%, #0d47a1 100%)",
                     textTransform: "none",
-                    boxShadow: "0 8px 20px rgba(10, 42, 90, 0.3)",
+                    boxShadow: "0 12px 28px -12px rgba(10, 42, 90, 0.6)",
                     "&:hover": {
-                      background: "linear-gradient(45deg, #0f2b5e 0%, #1e4a8b 70%, #2e6bb5 100%)",
+                      background: "linear-gradient(135deg, #081f45 0%, #0a2a5a 100%)",
                       transform: "translateY(-2px)",
                     },
                   }}

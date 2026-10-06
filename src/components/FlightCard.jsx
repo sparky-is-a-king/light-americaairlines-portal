@@ -21,16 +21,18 @@ const FlightCard = ({ flight, onBook }) => {
     <Card
       elevation={0}
       sx={{
-        borderRadius: 3,
-        border: "1px solid #e6ecf4",
-        boxShadow: "0 4px 16px rgba(13, 71, 161, 0.06)",
+        borderRadius: "22px",
+        border: "1px solid rgba(255, 255, 255, 0.85)",
+        backgroundColor: "rgba(255, 255, 255, 0.9)",
+        backdropFilter: "blur(16px) saturate(160%)",
+        boxShadow: "0 10px 30px -16px rgba(10, 42, 90, 0.22)",
         width: "100%",
         overflow: "hidden",
         transition: "box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease",
         "&:hover": {
           transform: "translateY(-3px)",
-          boxShadow: "0 14px 30px rgba(13, 71, 161, 0.14)",
-          borderColor: "rgba(13, 71, 161, 0.25)",
+          boxShadow: "0 20px 40px -18px rgba(10, 42, 90, 0.32)",
+          borderColor: "rgba(13, 71, 161, 0.22)",
         },
       }}
     >
@@ -49,15 +51,15 @@ const FlightCard = ({ flight, onBook }) => {
           sx={{
             width: 46,
             height: 46,
-            borderRadius: 2,
+            borderRadius: "15px", /* iOS squircle-ish app-icon shape */
             flexShrink: 0,
             display: "grid",
             placeItems: "center",
             color: "#fff",
             fontWeight: 800,
             fontSize: 18,
-            background: "linear-gradient(135deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%)",
-            boxShadow: "0 8px 18px -10px rgba(13, 71, 161, 0.9)",
+            background: "linear-gradient(135deg, #0a2a5a 0%, #0d47a1 55%, #1976d2 100%)",
+            boxShadow: "0 8px 18px -10px rgba(13, 71, 161, 0.9), inset 0 1px 0 rgba(255,255,255,0.25)",
           }}
         >
           {flight.airline?.[0] || "A"}
@@ -112,11 +114,11 @@ const FlightCard = ({ flight, onBook }) => {
               px: { xs: 2.5, sm: 3 },
               py: 1,
               fontWeight: 700,
-              borderRadius: 2.5,
+              borderRadius: 999,
               textTransform: "none",
-              background: "linear-gradient(135deg, #0d47a1 0%, #1976d2 100%)",
+              background: "linear-gradient(135deg, #0a2a5a 0%, #0d47a1 100%)",
               boxShadow: "0 8px 18px -10px rgba(13, 71, 161, 0.9)",
-              "&:hover": { background: "linear-gradient(135deg, #08306b 0%, #0d47a1 100%)" },
+              "&:hover": { background: "linear-gradient(135deg, #081f45 0%, #0a2a5a 100%)" },
             }}
           >
             Book

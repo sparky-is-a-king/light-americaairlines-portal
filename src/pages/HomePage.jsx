@@ -19,6 +19,11 @@ import {
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import { FlightCard, flights } from "../components/FlightCard";
+import BlurText from "../components/reactbits/BlurText";
+import CountUp from "../components/reactbits/CountUp";
+import Reveal from "../components/reactbits/Reveal";
+import SpotlightCard from "../components/reactbits/SpotlightCard";
+import StarBorder from "../components/reactbits/StarBorder";
 import {
   FlightTakeoff,
   FlightLand,
@@ -37,12 +42,6 @@ import { keyframes } from "@mui/system";
 const floatAnimation = keyframes`
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-20px); }
-`;
-
-const pulseAnimation = keyframes`
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.8; }
-  100% { transform: scale(1); opacity: 1; }
 `;
 
 const slideInFromRight = keyframes`
@@ -155,12 +154,6 @@ const HomePage = () => {
     scrollToBooking();
   };
 
-  const getHeroFontSize = () => {
-    if (isMobile) return "2rem";
-    if (isTablet) return "2.8rem";
-    return "3.5rem";
-  };
-
   const getSubtitleFontSize = () => {
     if (isMobile) return "0.9rem";
     if (isTablet) return "1.1rem";
@@ -175,7 +168,7 @@ const HomePage = () => {
       width: "100%",
       maxWidth: "100%",
       minHeight: "100vh",
-      bgcolor: "#ffffff"
+      bgcolor: "#F2F2F7"
     }}>
       {/* Airport Image Carousel - FULL WIDTH */}
       <Box
@@ -388,27 +381,11 @@ const HomePage = () => {
                 </Box>
               </Grow>
 
-              {/* Main Heading */}
-              <Typography
-                variant="h1"
-                sx={{
-                  fontWeight: 900,
-                  mb: { xs: 2, sm: 3 },
-                  fontSize: getHeroFontSize(),
-                  color: "#FFFFFF",
-                  textShadow: "0 4px 12px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.6)",
-                  lineHeight: { xs: 1.1, sm: 1.2, md: 1.1 },
-                }}
-              >
-                Elevate Your
-                <Box component="span" sx={{ 
-                  display: "block", 
-                  color: "#FFD700",
-                  textShadow: "0 4px 12px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.6)",
-                }}>
-                  Journey Experience
-                </Box>
-              </Typography>
+              {/* Main Heading — React Bits BlurText (word-by-word blur reveal) */}
+              <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+                <BlurText text="Elevate Your" delay={150} className="hero-title" />
+                <BlurText text="Journey Experience" delay={300} className="hero-title hero-title-gold" />
+              </Box>
 
               {/* Subtitle */}
               <Typography
@@ -434,10 +411,10 @@ const HomePage = () => {
                 justifyContent: { xs: "center", md: "flex-end" },
               }}>
                 {[
-                  { value: "500+", label: "Destinations" },
-                  { value: "24/7", label: "Support" },
-                  { value: "99.8%", label: "On-time Rate" },
-                  { value: "1M+", label: "Happy Travelers" },
+                  { value: 500, suffix: "+", label: "Destinations" },
+                  { text: "24/7", label: "Support" },
+                  { value: 99.8, suffix: "%", label: "On-time Rate" },
+                  { value: 1, suffix: "M+", label: "Happy Travelers" },
                 ].map((stat, index) => (
                   <Zoom in={true} timeout={1000} key={index} style={{ transitionDelay: `${index * 200}ms` }}>
                     <Box sx={{ 
@@ -457,7 +434,12 @@ const HomePage = () => {
                         fontSize: { xs: "1.25rem", sm: "1.5rem", md: "1.75rem", lg: "2rem" },
                         textShadow: "0 2px 4px rgba(0,0,0,0.5)"
                       }}>
-                        {stat.value}
+                        {stat.text ? stat.text : (
+                          <>
+                            <CountUp to={stat.value} duration={2} />
+                            {stat.suffix}
+                          </>
+                        )}
                       </Typography>
                       <Typography variant="body2" sx={{ 
                         color: "#FFFFFF", 
@@ -480,33 +462,22 @@ const HomePage = () => {
                 mb: { xs: 3, sm: 4 },
                 justifyContent: { xs: "center", md: "flex-end" },
               }}>
-                <Button
-                  variant="contained"
-                  size={isMobile ? "medium" : "large"}
+                {/* React Bits StarBorder — travelling-light capsule CTA */}
+                <StarBorder
+                  type="button"
                   onClick={scrollToBooking}
-                  endIcon={<ArrowForward />}
-                  sx={{
-                    px: { xs: 2.5, sm: 3, md: 4 },
-                    py: { xs: 1.25, sm: 1.5, md: 1.8 },
-                    fontWeight: 700,
-                    borderRadius: 3,
-                    background: "linear-gradient(45deg, #FFD700 0%, #FFA500 100%)",
-                    color: "#0a2a5a",
-                    fontSize: { xs: "0.8rem", sm: "0.85rem", md: "0.9rem", lg: "1rem" },
-                    textShadow: "0 1px 2px rgba(255,255,255,0.3)",
-                    animation: `${pulseAnimation} 2s infinite`,
-                    boxShadow: "0 8px 20px rgba(0,0,0,0.4)",
-                    border: "2px solid rgba(255,255,255,0.3)",
-                    '&:hover': {
-                      background: "linear-gradient(45deg, #FFC107 0%, #FF8C00 100%)",
-                      transform: "translateY(-2px)",
-                      boxShadow: "0 12px 25px rgba(0,0,0,0.5)",
-                    },
-                    minWidth: { xs: "140px", sm: "150px", md: "160px" },
-                  }}
+                  color="#FFD700"
+                  speed="5s"
+                  thickness={1.5}
+                  backgroundColor="linear-gradient(45deg, #FFD700 0%, #FFA500 100%)"
+                  textColor="#0a2a5a"
+                  borderColor="rgba(255,255,255,0.35)"
+                  className="hero-cta"
                 >
-                  Book Flight
-                </Button>
+                  <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}>
+                    Book Flight <ArrowForward sx={{ fontSize: 18 }} />
+                  </Box>
+                </StarBorder>
 
                 <Button
                   component={Link}
@@ -683,10 +654,12 @@ const HomePage = () => {
             justifyContent: "center",
             alignItems: "center",
             mb: { xs: 4, sm: 5, md: 6 },
-            bgcolor: "#f5f5f5",
+            bgcolor: "rgba(255,255,255,0.8)",
+            backdropFilter: "blur(20px) saturate(180%)",
+            border: "1px solid rgba(255,255,255,0.7)",
             p: { xs: 1.5, sm: 2, md: 3 },
-            borderRadius: { xs: 2, md: 3 },
-            boxShadow: "0 8px 25px rgba(13, 71, 161, 0.1)",
+            borderRadius: { xs: "24px", md: "28px" },
+            boxShadow: "0 16px 40px -20px rgba(10, 42, 90, 0.25)",
             width: "100%",
           }}
         >
@@ -752,14 +725,14 @@ const HomePage = () => {
             sx={{
               px: { xs: 3, sm: 4 },
               py: { xs: 1.25, sm: 1.5 },
-              bgcolor: "#1976d2",
+              background: "linear-gradient(135deg, #0a2a5a 0%, #0d47a1 100%)",
               color: "#fff",
-              fontWeight: 600,
-              borderRadius: 3,
+              fontWeight: 700,
+              borderRadius: 999,
               width: { xs: "100%", sm: "auto" },
               minWidth: { xs: "100%", sm: 140 },
               '&:hover': { 
-                bgcolor: "#0d47a1",
+                background: "linear-gradient(135deg, #081f45 0%, #0a2a5a 100%)",
                 transform: "translateY(-2px)",
                 boxShadow: "0 8px 20px rgba(13, 71, 161, 0.3)",
               },
@@ -830,16 +803,17 @@ const HomePage = () => {
 
           <Grid container spacing={{ xs: 2, sm: 3 }}>
             {popularDestinations.map((dest, index) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={index}>
-                <Card sx={{ 
-                  borderRadius: { xs: 2, sm: 3 }, 
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={index}>                <Card sx={{ 
+                  borderRadius: "24px", 
                   overflow: "hidden",
-                  boxShadow: "0 5px 20px rgba(0,0,0,0.08)",
+                  border: "1px solid rgba(255,255,255,0.8)",
+                  backgroundColor: "rgba(255,255,255,0.95)",
+                  boxShadow: "0 12px 32px -18px rgba(10, 42, 90, 0.25)",
                   transition: "all 0.3s ease",
                   height: "100%",
                   '&:hover': {
                     transform: "translateY(-8px)",
-                    boxShadow: "0 15px 30px rgba(0,0,0,0.15)"
+                    boxShadow: "0 24px 48px -20px rgba(10, 42, 90, 0.35)"
                   }
                 }}>
                   <Box sx={{ position: "relative" }}>
@@ -860,12 +834,14 @@ const HomePage = () => {
                       position: "absolute", 
                       top: 12, 
                       right: 12,
-                      bgcolor: "rgba(13, 71, 161, 0.9)",
-                      color: "white",
+                      bgcolor: "rgba(255, 255, 255, 0.82)",
+                      backdropFilter: "blur(12px) saturate(160%)",
+                      border: "1px solid rgba(255,255,255,0.7)",
+                      color: "#0a2a5a",
                       px: 1.5,
                       py: 0.5,
-                      borderRadius: 1.5,
-                      fontWeight: 600,
+                      borderRadius: 999,
+                      fontWeight: 700,
                       fontSize: { xs: "0.75rem", sm: "0.875rem" }
                     }}>
                       {dest.deals} deals
@@ -965,7 +941,9 @@ const HomePage = () => {
           }}>
             {visibleFlights.map((flight, index) => (
               <Box key={index} sx={{ width: "100%" }}>
-                <FlightCard flight={flight} onBook={handleBook} />
+                <Reveal delay={Math.min(index * 0.06, 0.4)} style={{ width: "100%" }}>
+                  <FlightCard flight={flight} onBook={handleBook} />
+                </Reveal>
               </Box>
             ))}
 
@@ -1009,12 +987,13 @@ const HomePage = () => {
 
       {/* Features Section - CENTERED */}
       <Box sx={{ 
-        bgcolor: "rgba(13, 71, 161, 0.02)", 
+        bgcolor: "rgba(255, 255, 255, 0.55)", 
         py: { xs: 6, sm: 7, md: 8 }, 
         animation: `${fadeInUp} 0.8s ease-out`,
         width: "100%",
       }}>
         <Container maxWidth="lg">
+          <Reveal>
           <Typography 
             variant="h4" 
             sx={{ 
@@ -1033,20 +1012,10 @@ const HomePage = () => {
           >
             {features.map((feature, index) => (
               <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
-                <Box sx={{ 
-                  textAlign: "center", 
-                  p: { xs: 2, sm: 3, md: 4 }, 
-                  borderRadius: { xs: 2, sm: 3 },
-                  bgcolor: "white",
-                  boxShadow: "0 5px 20px rgba(0,0,0,0.05)",
-                  height: "100%",
-                  transition: "all 0.3s ease",
-                  '&:hover': {
-                    boxShadow: "0 15px 30px rgba(0,0,0,0.1)",
-                    transform: "translateY(-5px)",
-                    bgcolor: "rgba(13, 71, 161, 0.02)"
-                  }
-                }}>
+                <SpotlightCard
+                  className="feature-card"
+                  spotlightColor="rgba(13, 71, 161, 0.18)"
+                >
                   <Typography variant="h3" sx={{ 
                     mb: { xs: 1.5, sm: 2 }, 
                     fontSize: { xs: "2rem", sm: "2.25rem", md: "2.5rem" } 
@@ -1067,10 +1036,11 @@ const HomePage = () => {
                   }}>
                     {feature.desc}
                   </Typography>
-                </Box>
+                </SpotlightCard>
               </Grid>
             ))}
           </Grid>
+          </Reveal>
         </Container>
       </Box>
     </Box>

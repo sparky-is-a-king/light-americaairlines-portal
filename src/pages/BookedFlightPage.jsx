@@ -1,13 +1,17 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import {
   Box,
   Typography,
   Paper,
   Grid,
   Button,
+  ButtonBase,
   Avatar,
   Chip,
+  Divider,
+  Drawer,
+  Snackbar,
   alpha,
   CircularProgress,
   Alert,
@@ -15,7 +19,6 @@ import {
 import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
 import FlightLandIcon from "@mui/icons-material/FlightLand";
 import DownloadIcon from "@mui/icons-material/Download";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
 import EventSeatIcon from "@mui/icons-material/EventSeat";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
@@ -31,17 +34,21 @@ import MovieIcon from "@mui/icons-material/Movie";
 import AirlineSeatReclineNormalIcon from "@mui/icons-material/AirlineSeatReclineNormal";
 import FlightIcon from "@mui/icons-material/Flight";
 import PublicIcon from "@mui/icons-material/Public";
-import TravelExploreIcon from "@mui/icons-material/TravelExplore";
 import HourglassBottomIcon from "@mui/icons-material/HourglassBottom";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import IosShareIcon from "@mui/icons-material/IosShare";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import LinkIcon from "@mui/icons-material/Link";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import html2canvas from "html2canvas";
-import { motion } from "framer-motion";
+import { motion as Motion, useDragControls } from "framer-motion";
 import { supabase } from "../supabaseClient";
+import { haptic } from "../utils/haptics";
 
 // ---------- Palette ----------
 const NAVY = "#0f2b5e";
 const NAVY_DEEP = "#0a2a5a";
-const NOTCH = "#eef2f7";
+const NOTCH = "#F2F2F7"; // iOS systemGroupedBackground — matches page bg so notches blend
 
 // ---------- Static Fallback ----------
 const WENDY_FLIGHT = {
@@ -146,9 +153,11 @@ const InfoTile = ({ icon, label, value, accent = NAVY, align = "left" }) => (
     sx={{
       height: "100%",
       p: { xs: 1.25, sm: 1.6 },
-      borderRadius: 2.5,
-      bgcolor: alpha(accent, 0.045),
-      border: `1px solid ${alpha(accent, 0.12)}`,
+      borderRadius: "16px",
+      bgcolor: alpha("#ffffff", 0.75),
+      backdropFilter: "blur(12px) saturate(150%)",
+      WebkitBackdropFilter: "blur(12px) saturate(150%)",
+      border: `1px solid ${alpha(accent, 0.16)}`,
       display: "flex",
       flexDirection: "column",
       gap: 0.6,
@@ -156,8 +165,8 @@ const InfoTile = ({ icon, label, value, accent = NAVY, align = "left" }) => (
       textAlign: align,
       transition: "border-color 0.2s ease, background-color 0.2s ease",
       "&:hover": {
-        bgcolor: alpha(accent, 0.08),
-        borderColor: alpha(accent, 0.28),
+        bgcolor: alpha("#ffffff", 0.95),
+        borderColor: alpha(accent, 0.35),
       },
     }}
   >
@@ -202,7 +211,7 @@ const Perforation = () => (
   <Box
     sx={{
       position: "relative",
-      borderTop: "2px dashed #cbd5e1",
+      borderTop: "2px dashed rgba(15, 43, 94, 0.22)",
       mt: { xs: 0.5, sm: 1 },
     }}
   >
@@ -231,7 +240,7 @@ const AmenityRow = ({ icon, text }) => (
       sx={{
         width: 30,
         height: 30,
-        borderRadius: 1.5,
+        borderRadius: "10px",
         display: "grid",
         placeItems: "center",
         bgcolor: alpha(NAVY, 0.07),
@@ -255,11 +264,34 @@ const AmenityRow = ({ icon, text }) => (
   </Box>
 );
 
+// ---------- Share Sheet Row (iOS action sheet row) ----------
+const ShareRow = ({ icon, label, onClick, disabled = false }) => (
+  <ButtonBase
+    onClick={onClick}
+    disabled={disabled}
+    sx={{
+      width: "100%",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "flex-start",
+      gap: 1.5,
+      px: 2,
+      py: 1.5,
+      color: NAVY,
+      "&:hover": { bgcolor: alpha(NAVY, 0.05) },
+    }}
+  >
+    <Box sx={{ display: "grid", placeItems: "center", color: NAVY, "& svg": { fontSize: 21 } }}>
+      {icon}
+    </Box>
+    <Typography sx={{ fontWeight: 600, fontSize: { xs: "0.9rem", sm: "0.95rem" } }}>{label}</Typography>
+  </ButtonBase>
+);
+
 // ---------- Main Component ----------
 const BoardingPass = () => {
   const { flightId } = useParams();
   const location = useLocation();
-  const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
   const forceHold = queryParams.get('hold') === 'true';
 
@@ -269,6 +301,19 @@ const BoardingPass = () => {
   const [renderKey, setRenderKey] = useState(0);
   const passRef = useRef(null);
   const abortControllerRef = useRef(null);
+
+  // Apple Wallet-style stub + iOS share sheet state
+  const stubControls = useDragControls();
+  // A drag that ends on the grabber also fires a click; this flag swallows that
+  // trailing click so a swipe doesn't immediately undo itself.
+  const stubDragged = useRef(false);
+  // The stub starts expanded so the pass is never missing its barcode on load;
+  // the Wallet gesture then collapses/expands it.
+  const [stubExpanded, setStubExpanded] = useState(true);
+  const [shareSheetOpen, setShareSheetOpen] = useState(false);
+  const [sharePreview, setSharePreview] = useState("");
+  const [shareBusy, setShareBusy] = useState(false);
+  const [toast, setToast] = useState({ open: false, message: "" });
 
   // Force fix for horizontal scroll
   useEffect(() => {
@@ -366,21 +411,155 @@ const BoardingPass = () => {
     };
   }, [flightId]);
 
-  // ---------- Download Handler ----------
-  const handleDownload = async () => {
-    if (!passRef.current) return;
+  /**
+   * Snackbar opens on a macrotask. Snackbar dismisses itself when the page is
+   * clicked (MUI wraps it in a ClickAwayListener), so opening it from inside an
+   * async handler — while the originating click is still propagating — would
+   * flash it for a frame and instantly dismiss it. Deferring past that click
+   * makes the toast reliable for both sync and awaited actions.
+   */
+  const showToast = (message) => {
+    setTimeout(() => setToast({ open: true, message }), 0);
+  };
+
+  // ---------- Pass image (shared by download + share) ----------
+  const passFileName = `boarding-pass-${flight?.flight_number || "flight"}.png`;
+
+  /**
+   * Render the pass to a canvas. The stub is always expanded first so the
+   * captured image contains the whole pass (gate, total paid, barcode) —
+   * never just the collapsed Wallet-style card.
+   */
+  const renderPassCanvas = async () => {
+    if (!passRef.current) return null;
+    if (!stubExpanded) {
+      setStubExpanded(true);
+      // let the expand spring settle before capturing
+      await new Promise((resolve) => setTimeout(resolve, 420));
+    }
+    return html2canvas(passRef.current, {
+      backgroundColor: "#fff",
+      scale: 2,
+      logging: false,
+    });
+  };
+
+  const buildPassImage = async () => {
+    const canvas = await renderPassCanvas();
+    if (!canvas) return null;
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+    if (!blob) return null;
+    return {
+      blob,
+      file: new File([blob], passFileName, { type: "image/png" }),
+      dataUrl: canvas.toDataURL("image/png"),
+    };
+  };
+
+  // Saving the pass is handled by the share sheet's "Save image" row
+  // (handleSaveImage) — there is no separate download button.
+
+  // ---------- Share (Apple Wallet-style) ----------
+  // Uses the device's native share sheet when it can carry a file; otherwise a
+  // Liquid Glass action sheet mirrors it on desktop.
+  const handleShare = async () => {
+    setShareBusy(true);
     try {
-      const canvas = await html2canvas(passRef.current, {
-        backgroundColor: "#fff",
-        scale: 2,
-        logging: false,
-      });
-      const link = document.createElement("a");
-      link.download = `boarding-pass-${flight?.flight_number || "flight"}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+      const image = await buildPassImage();
+      if (!image) return;
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [image.file] })) {
+        await navigator.share({
+          files: [image.file],
+          title: `Boarding pass ${flightNum}`,
+          text: `${depCode} → ${arrCode} • ${flightDate} • Seat ${seat}`,
+        });
+        return;
+      }
+      setSharePreview(image.dataUrl);
+      setShareSheetOpen(true);
     } catch (err) {
-      console.error("Screenshot failed:", err);
+      console.error("Share failed:", err);
+      setSharePreview("");
+      setShareSheetOpen(true);
+    } finally {
+      setShareBusy(false);
+    }
+  };
+
+  const handleSaveImage = async () => {
+    setShareBusy(true);
+    try {
+      const image = sharePreview || (await buildPassImage())?.dataUrl;
+      if (!image) return;
+      const link = document.createElement("a");
+      link.download = passFileName;
+      link.href = image;
+      link.click();
+      showToast("Boarding pass saved");
+      setShareSheetOpen(false);
+    } catch (err) {
+      console.error("Save failed:", err);
+      showToast("Couldn't save the image");
+    } finally {
+      setShareBusy(false);
+    }
+  };
+
+  const handleCopyImage = async () => {
+    setShareBusy(true);
+    try {
+      const image = await buildPassImage();
+      if (!image) return;
+      if (navigator.clipboard?.write && window.ClipboardItem) {
+        await navigator.clipboard.write([new window.ClipboardItem({ "image/png": image.blob })]);
+        showToast("Boarding pass copied");
+        setShareSheetOpen(false);
+      } else {
+        showToast("Copying images isn't supported here — saving instead");
+        await handleSaveImage();
+      }
+    } catch (err) {
+      console.error("Copy image failed:", err);
+      showToast("Couldn't copy the image");
+    } finally {
+      setShareBusy(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      showToast("Link copied");
+      setShareSheetOpen(false);
+    } catch (err) {
+      console.error("Copy link failed:", err);
+      showToast("Couldn't copy the link");
+    }
+  };
+
+  const handleNativeShare = async () => {
+    try {
+      await navigator.share({
+        title: `Boarding pass ${flightNum}`,
+        text: `${depCode} → ${arrCode} • ${flightDate}`,
+        url: window.location.href,
+      });
+      setShareSheetOpen(false);
+    } catch (err) {
+      if (err?.name !== "AbortError") showToast("Sharing isn't available");
+    }
+  };
+
+  // ---------- Wallet-style stub gesture ----------
+  const handleStubDragEnd = (event, info) => {
+    const draggedUp = info.offset.y < -36 || info.velocity.y < -320;
+    const draggedDown = info.offset.y > 36 || info.velocity.y > 320;
+    if (draggedUp) {
+      setStubExpanded(true);
+      haptic("light");
+    } else if (draggedDown) {
+      setStubExpanded(false);
+      haptic("light");
     }
   };
 
@@ -542,7 +721,7 @@ const BoardingPass = () => {
         width: "100%",
         maxWidth: "100%",
         overflowX: "clip",
-        background: "radial-gradient(circle at 12% 18%, #ffffff 0%, #f1f5f9 45%, #dde5ef 100%)",
+        background: "radial-gradient(circle at 12% 18%, #ffffff 0%, #F2F2F7 45%, #e2e8f3 100%)",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
@@ -550,7 +729,7 @@ const BoardingPass = () => {
         p: { xs: 1, sm: 2, md: 3 },
       }}
     >
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: loaded ? 1 : 0, y: loaded ? 0 : 30 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -568,10 +747,12 @@ const BoardingPass = () => {
           sx={{
             width: "100%",
             maxWidth: "100%",
-            borderRadius: { xs: 3, sm: 4 },
+            borderRadius: "32px",
             overflow: "hidden",
-            bgcolor: "#ffffff",
-            boxShadow: "0 30px 60px -20px rgba(15, 43, 94, 0.35), 0 0 0 1px rgba(226, 232, 240, 0.9)",
+            bgcolor: "rgba(255, 255, 255, 0.92)",
+            backdropFilter: "blur(24px) saturate(180%)",
+            WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            boxShadow: "0 30px 60px -24px rgba(10, 42, 90, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.7)",
           }}
         >
           {/* Decorative Top Bar */}
@@ -590,7 +771,7 @@ const BoardingPass = () => {
                 icon={<WarningIcon />}
                 sx={{
                   mb: 2.5,
-                  borderRadius: 2,
+                  borderRadius: "20px",
                   fontWeight: 600,
                   bgcolor: alpha('#d32f2f', 0.08),
                   color: '#b71c1c',
@@ -615,7 +796,7 @@ const BoardingPass = () => {
                 icon={<HourglassBottomIcon />}
                 sx={{
                   mb: 2.5,
-                  borderRadius: 2,
+                  borderRadius: "20px",
                   bgcolor: alpha('#ed6c02', 0.08),
                   color: '#7c3d00',
                   border: '1px solid rgba(237, 108, 2, 0.45)',
@@ -632,8 +813,8 @@ const BoardingPass = () => {
                   sx={{
                     mt: 1.25,
                     p: { xs: 1.1, sm: 1.35 },
-                    borderRadius: 2,
-                    bgcolor: "#ffffff",
+                    borderRadius: "14px",
+                    bgcolor: "rgba(255, 255, 255, 0.9)",
                     border: "1px solid rgba(237, 108, 2, 0.45)",
                     display: "flex",
                     alignItems: "flex-start",
@@ -677,7 +858,7 @@ const BoardingPass = () => {
                     background: "linear-gradient(135deg, #0f2b5e 0%, #2e6bb5 100%)",
                     width: { xs: 44, sm: 58 },
                     height: { xs: 44, sm: 58 },
-                    borderRadius: 2.5,
+                    borderRadius: "18px",
                     fontSize: { xs: 14, sm: 20 },
                     fontWeight: 800,
                     letterSpacing: "0.03em",
@@ -753,7 +934,7 @@ const BoardingPass = () => {
                     fontSize: { xs: "0.58rem", sm: "0.7rem" },
                     mb: 0.5,
                     height: { xs: 22, sm: 26 },
-                    borderRadius: 1.5,
+                    borderRadius: 999,
                     backgroundColor: onHold ? '#d32f2f' : getStatusBackgroundColor(status),
                     color: onHold ? '#ffffff' : getStatusTextColor(status),
                     border: onHold ? '1px solid #b71c1c' : `1px solid ${alpha(getStatusBorderColor(status), 0.9)}`,
@@ -775,10 +956,13 @@ const BoardingPass = () => {
             <Box
               sx={{
                 mt: { xs: 2, sm: 2.5 },
-                background: "linear-gradient(135deg, #f8fafc 0%, #eef3fa 100%)",
-                borderRadius: 3,
+                background: "rgba(255, 255, 255, 0.75)",
+                backdropFilter: "blur(16px) saturate(160%)",
+                WebkitBackdropFilter: "blur(16px) saturate(160%)",
+                borderRadius: "22px",
                 p: { xs: 1.75, sm: 2.5 },
-                border: "1px solid rgba(219, 228, 240, 0.9)",
+                border: "1px solid rgba(255, 255, 255, 0.85)",
+                boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.9)",
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
@@ -934,10 +1118,10 @@ const BoardingPass = () => {
               sx={{
                 mt: { xs: 2, sm: 2.5 },
                 background: "linear-gradient(135deg, #0f2b5e 0%, #1e4a8b 55%, #2e6bb5 100%)",
-                borderRadius: 3,
+                borderRadius: "22px",
                 p: { xs: 1.75, sm: 2.25 },
                 color: "#ffffff",
-                boxShadow: "0 16px 34px -20px rgba(15, 43, 94, 0.9)",
+                boxShadow: "0 16px 34px -20px rgba(15, 43, 94, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.22)",
                 position: "relative",
                 overflow: "hidden",
               }}
@@ -983,9 +1167,11 @@ const BoardingPass = () => {
               sx={{
                 mt: { xs: 2, sm: 2.5 },
                 p: { xs: 1.75, sm: 2.25 },
-                borderRadius: 3,
-                border: "1px solid #e6ecf4",
-                bgcolor: "#fcfdff",
+                borderRadius: "22px",
+                border: "1px solid rgba(255, 255, 255, 0.85)",
+                bgcolor: "rgba(255, 255, 255, 0.78)",
+                backdropFilter: "blur(16px) saturate(160%)",
+                WebkitBackdropFilter: "blur(16px) saturate(160%)",
               }}
             >
               <SectionHeading icon={<FlightIcon sx={{ fontSize: 15 }} />}>
@@ -1027,7 +1213,82 @@ const BoardingPass = () => {
           {/* ---- PERFORATION (body / stub split) ---- */}
           <Perforation />
 
-          {/* ---- STUB ---- */}
+          {/* ---- GRABBER: Apple Wallet-style — drag or tap to reveal the stub ---- */}
+          <Motion.div
+            drag="y"
+            dragControls={stubControls}
+            dragListener={false}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={0.35}
+            whileTap={{ scale: 0.995 }}
+            onDragStart={() => {
+              stubDragged.current = false;
+              haptic("light");
+            }}
+            onDrag={() => {
+              stubDragged.current = true;
+            }}
+            onDragEnd={(event, info) => {
+              handleStubDragEnd(event, info);
+              // clear after this pointerup's click has been dispatched
+              setTimeout(() => {
+                stubDragged.current = false;
+              }, 0);
+            }}
+            style={{ touchAction: "none" }}
+          >
+            <ButtonBase
+              onPointerDown={(e) => stubControls.start(e)}
+              onClick={() => {
+                if (stubDragged.current) return;
+                haptic("light");
+                setStubExpanded((v) => !v);
+              }}
+              aria-expanded={stubExpanded}
+              aria-label={stubExpanded ? "Collapse boarding pass stub" : "Expand boarding pass stub"}
+              sx={{
+                width: "100%",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 0.5,
+                pt: 1.25,
+                pb: 0.75,
+                cursor: "grab",
+                "&:active": { cursor: "grabbing" },
+              }}
+            >
+              <Box sx={{ width: 44, height: 5, borderRadius: 999, bgcolor: alpha(NAVY, 0.22) }} />
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <Typography
+                  sx={{
+                    fontSize: { xs: "0.55rem", sm: "0.68rem" },
+                    fontWeight: 700,
+                    color: "#64748b",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {stubExpanded ? "Swipe down to collapse" : "Swipe up for gate, total paid & barcode"}
+                </Typography>
+                <Motion.span
+                  animate={{ rotate: stubExpanded ? 180 : 0 }}
+                  transition={{ type: "spring", stiffness: 320, damping: 26 }}
+                  style={{ display: "inline-flex" }}
+                >
+                  <KeyboardArrowUpIcon sx={{ fontSize: 16, color: "#64748b" }} />
+                </Motion.span>
+              </Box>
+            </ButtonBase>
+          </Motion.div>
+
+          {/* ---- STUB (collapsible, Wallet-style) ---- */}
+          <Motion.div
+            initial={false}
+            animate={{ height: stubExpanded ? "auto" : 168 }}
+            transition={{ type: "spring", stiffness: 320, damping: 34 }}
+            style={{ overflow: "hidden", position: "relative" }}
+          >
           <Box sx={{ px: { xs: 2, sm: 3, md: 3.5 }, pt: { xs: 2, sm: 2.5 }, pb: { xs: 2, sm: 2.5 } }}>
             <SectionHeading icon={<FlightLandIcon sx={{ fontSize: 15 }} />}>
               Boarding essentials
@@ -1057,9 +1318,12 @@ const BoardingPass = () => {
                 justifyContent: "space-between",
                 gap: 1,
                 p: { xs: 1.5, sm: 2 },
-                borderRadius: 3,
-                bgcolor: alpha(NAVY, 0.035),
-                border: `1px dashed ${alpha(NAVY, 0.2)}`,
+                borderRadius: "18px",
+                bgcolor: alpha("#ffffff", 0.8),
+                backdropFilter: "blur(12px) saturate(150%)",
+                WebkitBackdropFilter: "blur(12px) saturate(150%)",
+                border: "1px solid rgba(255, 255, 255, 0.9)",
+                boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.9)",
                 flexWrap: "wrap",
               }}
             >
@@ -1161,11 +1425,27 @@ const BoardingPass = () => {
             </Box>
           </Box>
 
+            {!stubExpanded && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: 64,
+                  pointerEvents: "none",
+                  background:
+                    "linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.96) 78%)",
+                }}
+              />
+            )}
+          </Motion.div>
+
           {/* Footer */}
           <Box
             sx={{
-              bgcolor: "#f7f9fc",
-              borderTop: "1px solid #e6ecf4",
+            bgcolor: "rgba(255, 255, 255, 0.65)",
+            borderTop: "1px solid rgba(15, 43, 94, 0.08)",
               px: { xs: 2, sm: 3 },
               py: { xs: 1.5, sm: 1.75 },
               textAlign: "center",
@@ -1176,10 +1456,10 @@ const BoardingPass = () => {
             </Typography>
           </Box>
         </Paper>
-      </motion.div>
+      </Motion.div>
 
-      {/* Action Buttons */}
-      <motion.div
+      {/* Action Buttons — iOS hierarchy: one primary action, navigation beneath */}
+      <Motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: loaded ? 1 : 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
@@ -1187,86 +1467,176 @@ const BoardingPass = () => {
       >
         <Box
           sx={{
-            display: "flex",
-            gap: { xs: 1.25, sm: 1.5 },
-            flexDirection: { xs: "column", sm: "row" },
             width: "100%",
-            maxWidth: 660,
+            maxWidth: 440,
             px: { xs: 1, sm: 0 },
             mt: 3,
-            flexWrap: "wrap",
-            justifyContent: "center",
+            display: "flex",
+            flexDirection: "column",
+            gap: 1.25,
           }}
         >
+          {/* Primary — sharing covers saving, copying and sending the pass */}
           <Button
-            component={Link}
-            to="/"
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            fullWidth
-            sx={{
-              flex: 1,
-              minWidth: { sm: 165 },
-              px: { xs: 2, sm: 3 },
-              py: { xs: 1, sm: 1.25 },
-              borderRadius: 3,
-              borderColor: "#cbd5e1",
-              color: "#475569",
-              fontWeight: 700,
-              fontSize: { xs: "0.75rem", sm: "0.875rem" },
-              bgcolor: alpha("#ffffff", 0.7),
-              "&:hover": { borderColor: NAVY, color: NAVY, bgcolor: "#ffffff" },
-            }}
-          >
-            Back to Home
-          </Button>
-          <Button
-            onClick={() => navigate("/track")}
-            variant="outlined"
-            startIcon={<TravelExploreIcon />}
-            fullWidth
-            sx={{
-              flex: 1,
-              minWidth: { sm: 165 },
-              px: { xs: 2, sm: 3 },
-              py: { xs: 1, sm: 1.25 },
-              borderRadius: 3,
-              borderColor: NAVY,
-              color: NAVY,
-              fontWeight: 700,
-              fontSize: { xs: "0.75rem", sm: "0.875rem" },
-              "&:hover": { bgcolor: alpha(NAVY, 0.06), borderColor: NAVY },
-            }}
-          >
-            Track a Flight
-          </Button>
-          <Button
-            onClick={handleDownload}
+            onClick={handleShare}
+            disabled={shareBusy}
             variant="contained"
-            startIcon={<DownloadIcon />}
+            startIcon={
+              shareBusy ? <CircularProgress size={18} sx={{ color: "#fff" }} /> : <IosShareIcon />
+            }
             fullWidth
             sx={{
-              flex: 1.4,
-              minWidth: { sm: 200 },
-              px: { xs: 2, sm: 3 },
-              py: { xs: 1, sm: 1.25 },
-              borderRadius: 3,
-              background: "linear-gradient(135deg, #0f2b5e 0%, #1e4a8b 55%, #2e6bb5 100%)",
+              py: { xs: 1.35, sm: 1.6 },
+              borderRadius: 999,
+              background: "linear-gradient(135deg, #0a2a5a 0%, #0d47a1 100%)",
               color: "white",
               fontWeight: 700,
-              fontSize: { xs: "0.75rem", sm: "0.875rem" },
-              boxShadow: "0 14px 26px -12px rgba(15, 43, 94, 0.7)",
+              fontSize: { xs: "0.85rem", sm: "0.95rem" },
+              boxShadow: "0 14px 30px -14px rgba(10, 42, 90, 0.75)",
               "&:hover": {
-                background: "linear-gradient(135deg, #0a2a5a 0%, #1a3f77 55%, #28619f 100%)",
+                background: "linear-gradient(135deg, #081f45 0%, #0a2a5a 100%)",
                 transform: "translateY(-2px)",
+              },
+              "&.Mui-disabled": {
+                color: "rgba(255, 255, 255, 0.8)",
+                background: "linear-gradient(135deg, #475569 0%, #64748b 100%)",
               },
               transition: "all 0.2s ease",
             }}
           >
-            Download Boarding Pass
+            {shareBusy ? "Preparing pass…" : "Share Boarding Pass"}
+          </Button>
+
+          {/* The share sheet carries save / copy / send, so say so plainly */}
+          <Typography
+            sx={{
+              textAlign: "center",
+              color: "#94a3b8",
+              fontSize: { xs: "0.6rem", sm: "0.68rem" },
+              fontWeight: 600,
+              letterSpacing: "0.03em",
+              mt: 0.25,
+            }}
+          >
+            Save as image, copy, or send — all from the share sheet
+          </Typography>
+        </Box>
+      </Motion.div>
+
+      {/* ---- iOS share sheet (used when the native share sheet can't carry a file) ---- */}
+      <Drawer
+        anchor="bottom"
+        open={shareSheetOpen}
+        onClose={() => setShareSheetOpen(false)}
+        sx={{ zIndex: 1500 }}
+        PaperProps={{
+          sx: {
+            borderTopLeftRadius: "28px",
+            borderTopRightRadius: "28px",
+            bgcolor: "rgba(255, 255, 255, 0.92)",
+            backdropFilter: "blur(24px) saturate(180%)",
+            WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            border: "1px solid rgba(255, 255, 255, 0.85)",
+            boxShadow: "0 -20px 60px -24px rgba(10, 42, 90, 0.45)",
+            pb: "calc(16px + env(safe-area-inset-bottom))",
+            width: "100%",
+            maxWidth: 520,
+            mx: "auto",
+          },
+        }}
+      >
+        <Box sx={{ pt: 1.25, px: 2.5, display: "flex", flexDirection: "column", gap: 1.5 }}>
+          <Box sx={{ width: 44, height: 5, borderRadius: 999, bgcolor: alpha(NAVY, 0.22), mx: "auto" }} />
+
+          <Typography sx={{ textAlign: "center", fontWeight: 800, color: NAVY, fontSize: "0.95rem" }}>
+            Share boarding pass
+          </Typography>
+
+          {sharePreview && (
+            <Box
+              component="img"
+              src={sharePreview}
+              alt="Boarding pass preview"
+              sx={{
+                width: "100%",
+                maxHeight: 200,
+                objectFit: "contain",
+                borderRadius: "18px",
+                border: "1px solid rgba(15, 43, 94, 0.08)",
+                bgcolor: "#ffffff",
+              }}
+            />
+          )}
+
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              borderRadius: "18px",
+              overflow: "hidden",
+              border: "1px solid rgba(15, 43, 94, 0.08)",
+              bgcolor: "rgba(255, 255, 255, 0.85)",
+            }}
+          >
+            <ShareRow
+              icon={<DownloadIcon />}
+              label="Save image"
+              onClick={handleSaveImage}
+              disabled={shareBusy}
+            />
+            <Divider />
+            <ShareRow
+              icon={<ContentCopyIcon />}
+              label="Copy image"
+              onClick={handleCopyImage}
+              disabled={shareBusy}
+            />
+            <Divider />
+            <ShareRow
+              icon={<LinkIcon />}
+              label="Copy link"
+              onClick={handleCopyLink}
+              disabled={shareBusy}
+            />
+            {typeof navigator !== "undefined" && navigator.share && (
+              <>
+                <Divider />
+                <ShareRow
+                  icon={<IosShareIcon />}
+                  label="Share…"
+                  onClick={handleNativeShare}
+                  disabled={shareBusy}
+                />
+              </>
+            )}
+          </Box>
+
+          <Button
+            onClick={() => setShareSheetOpen(false)}
+            fullWidth
+            sx={{
+              borderRadius: "18px",
+              py: 1.4,
+              bgcolor: "rgba(255, 255, 255, 0.9)",
+              color: NAVY,
+              fontWeight: 700,
+              border: "1px solid rgba(15, 43, 94, 0.08)",
+              "&:hover": { bgcolor: "#ffffff" },
+            }}
+          >
+            Cancel
           </Button>
         </Box>
-      </motion.div>
+      </Drawer>
+
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={2600}
+        onClose={() => setToast({ open: false, message: "" })}
+        message={toast.message}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        ContentProps={{ sx: { borderRadius: 999, bgcolor: NAVY, fontWeight: 600 } }}
+      />
     </Box>
   );
 };

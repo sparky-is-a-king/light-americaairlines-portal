@@ -15,10 +15,33 @@ html, body {
 body {
   margin: 0;
   padding: 0;
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", "Segoe UI", Roboto, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f8fafc;
+  background-color: #f2f2f7; /* iOS systemGroupedBackground */
+  color: #0a1f3c;
+}
+
+::selection {
+  background: rgba(13, 71, 161, 0.18);
+}
+
+/* iOS-style slim scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(10, 42, 90, 0.22);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(10, 42, 90, 0.38);
+  background-clip: content-box;
+  border: 3px solid transparent;
 }
 
 #root {
@@ -45,4 +68,64 @@ body {
   margin-right: auto;
   padding-left: 16px;
   padding-right: 16px;
+}
+
+/* ---- Liquid Glass utilities (iOS 26-inspired) ---- */
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+/* Hero headline typography (used with React Bits BlurText) */
+.hero-title {
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-size: clamp(2rem, 4.6vw, 3.5rem);
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.55);
+  justify-content: center;
+}
+.hero-title-gold {
+  color: #ffd700;
+}
+
+/* React Bits StarBorder CTA in the hero */
+.hero-cta .inner-content {
+  min-width: 170px;
+}
+
+/* React Bits SpotlightCard used for feature cards */
+.feature-card {
+  height: 100%;
+  text-align: center;
+}
+@media (min-width: 900px) {
+  .hero-title {
+    justify-content: flex-end;
+  }
+}
+
+/* Accessibility: respect reduce motion and reduce transparency, as Apple's
+   Liquid Glass guidance requires. Framer-motion animations are additionally
+   gated by <MotionConfig reducedMotion="user"> in App.jsx. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: #ffffff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }

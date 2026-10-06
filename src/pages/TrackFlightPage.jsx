@@ -51,7 +51,7 @@ import {
   Info,
   ArrowBack,
 } from "@mui/icons-material";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
@@ -213,11 +213,13 @@ const FlightTimeline = ({ events }) => {
             elevation={0}
             sx={{ 
               p: 2, 
-              borderRadius: 2, 
+              borderRadius: '18px', 
               ml: 4,
               border: '1px solid',
-              borderColor: event.status === 'current' ? 'primary.main' : 'divider',
-              bgcolor: event.status === 'current' ? alpha('#2196f3', 0.05) : 'background.paper',
+              borderColor: event.status === 'current' ? 'primary.main' : 'rgba(255, 255, 255, 0.9)',
+              bgcolor: event.status === 'current' ? alpha('#2196f3', 0.05) : 'rgba(255, 255, 255, 0.85)',
+              backdropFilter: 'blur(12px) saturate(150%)',
+              WebkitBackdropFilter: 'blur(12px) saturate(150%)',
             }}
           >
             <Typography variant="body2" fontWeight="600">
@@ -240,11 +242,10 @@ const FlightMapVisualization = ({ from, to, progress }) => {
   return (
     <Box sx={{ 
       height: { xs: 300, md: 400 },
-      borderRadius: 2, 
+      borderRadius: '22px', 
       position: 'relative',
-      bgcolor: alpha('#1976d2', 0.03),
-      border: '1px solid',
-      borderColor: 'divider',
+      bgcolor: 'rgba(255, 255, 255, 0.82)',
+      border: '1px solid rgba(255, 255, 255, 0.9)',
       overflow: 'hidden',
     }}>
       <Box sx={{
@@ -383,7 +384,7 @@ const QRScannerModal = ({ open, onClose, onScan }) => {
           width: { xs: '90%', sm: 400 },
           outline: 'none',
         }}>
-          <Paper sx={{ p: 3, borderRadius: 3 }}>
+          <Paper sx={{ p: 3, borderRadius: '28px', bgcolor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)', border: '1px solid rgba(255, 255, 255, 0.8)', boxShadow: '0 24px 56px -24px rgba(10, 42, 90, 0.4)' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h5" fontWeight="700">
                 Scan QR Code
@@ -436,7 +437,12 @@ const QRScannerModal = ({ open, onClose, onScan }) => {
               size="large"
               onClick={handleSimulateScan}
               disabled={scanning}
-              sx={{ py: 1.5, borderRadius: 2 }}
+              sx={{
+                py: 1.5,
+                borderRadius: 999,
+                background: 'linear-gradient(135deg, #0a2a5a 0%, #0d47a1 100%)',
+                '&:hover': { background: 'linear-gradient(135deg, #081f45 0%, #0a2a5a 100%)' },
+              }}
             >
               {scanning ? 'Scanning...' : 'Scan QR Code'}
             </Button>
@@ -565,10 +571,20 @@ const TrackFlightPage = () => {
 
   // ==================== RENDER ====================
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc', py: { xs: 2, sm: 3, md: 4 } }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#F2F2F7', py: { xs: 2, sm: 3, md: 4 } }}>
       <Container maxWidth="xl">
         <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 2, sm: 3 }, px: { xs: 1, sm: 0 } }}>
-          <IconButton onClick={() => navigate('/')} sx={{ mr: 2 }}>
+          <IconButton
+            onClick={() => navigate('/')}
+            sx={{
+              mr: 2,
+              bgcolor: 'rgba(255, 255, 255, 0.8)',
+              backdropFilter: 'blur(12px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(12px) saturate(160%)',
+              border: '1px solid rgba(255, 255, 255, 0.9)',
+              boxShadow: '0 8px 20px -12px rgba(10, 42, 90, 0.35)',
+            }}
+          >
             <ArrowBack />
           </IconButton>
           <Typography variant={isMobile ? "h5" : "h4"} fontWeight="800">
@@ -579,7 +595,20 @@ const TrackFlightPage = () => {
         <Grid container spacing={3}>
           {/* Left Column - Search */}
           <Grid size={{ xs: 12, md: 4, lg: 3 }}>
-            <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 }, borderRadius: 3, border: '1px solid', borderColor: 'divider', position: 'sticky', top: 24 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 2, sm: 3 },
+                borderRadius: '24px',
+                bgcolor: 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(24px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+                border: '1px solid rgba(255, 255, 255, 0.8)',
+                boxShadow: '0 16px 40px -20px rgba(10, 42, 90, 0.28)',
+                position: 'sticky',
+                top: 24,
+              }}
+            >
               <Typography variant="h6" gutterBottom fontWeight="700" sx={{ mb: 3 }}>
                 Track Your Flight
               </Typography>
@@ -625,7 +654,17 @@ const TrackFlightPage = () => {
                 onClick={() => handleTrack()}
                 disabled={loading}
                 startIcon={loading ? <CircularProgress size={20} /> : <SearchIcon />}
-                sx={{ py: 1.5, borderRadius: 2, fontWeight: "700", mb: 2 }}
+                sx={{
+                  py: 1.5,
+                  borderRadius: 999,
+                  fontWeight: 700,
+                  mb: 2,
+                  background: 'linear-gradient(135deg, #0a2a5a 0%, #0d47a1 100%)',
+                  boxShadow: '0 12px 28px -12px rgba(10, 42, 90, 0.6)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #081f45 0%, #0a2a5a 100%)',
+                  },
+                }}
               >
                 {loading ? "Searching..." : "Track Flight"}
               </Button>
@@ -667,14 +706,25 @@ const TrackFlightPage = () => {
           <Grid size={{ xs: 12, md: 8, lg: 9 }}>
             {trackedFlight ? (
               <AnimatePresence mode="wait">
-                <motion.div
+                <Motion.div
                   key={viewMode}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                 >
-                  <Paper elevation={0} sx={{ borderRadius: 3, border: "1px solid", borderColor: "divider", overflow: "hidden" }}>
-                    <Box sx={{ p: { xs: 2, sm: 3 }, bgcolor: alpha('#1976d2', 0.02), borderBottom: '1px solid', borderColor: 'divider' }}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      borderRadius: '28px',
+                      bgcolor: 'rgba(255, 255, 255, 0.9)',
+                      backdropFilter: 'blur(24px) saturate(180%)',
+                      WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+                      border: '1px solid rgba(255, 255, 255, 0.8)',
+                      boxShadow: '0 24px 56px -24px rgba(10, 42, 90, 0.3)',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <Box sx={{ p: { xs: 2, sm: 3 }, bgcolor: 'rgba(255, 255, 255, 0.55)', borderBottom: '1px solid rgba(15, 43, 94, 0.08)' }}>
                       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 2, gap: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                           <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
@@ -694,7 +744,7 @@ const TrackFlightPage = () => {
                             icon={getStatusIcon(trackedFlight.status)}
                             label={trackedFlight.status.replace('_', ' ')}
                             color={getStatusColor(trackedFlight.status)}
-                            sx={{ fontWeight: 600 }}
+                            sx={{ fontWeight: 600, borderRadius: 999 }}
                           />
                           <Tooltip title="Clear flight">
                             <IconButton size="small" onClick={clearTrackedFlight}>
@@ -736,14 +786,36 @@ const TrackFlightPage = () => {
                       </Box>
 
                       {trackedFlight.statusDetails && (
-                        <Alert severity="info" sx={{ mt: 2, borderRadius: 2 }}>
+                        <Alert severity="info" sx={{ mt: 2, borderRadius: '16px' }}>
                           {trackedFlight.statusDetails}
                         </Alert>
                       )}
                     </Box>
 
                     <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-                      <ToggleButtonGroup value={viewMode} exclusive onChange={(e, newMode) => newMode && setViewMode(newMode)} size={isMobile ? "small" : "medium"}>
+                      <ToggleButtonGroup
+                        value={viewMode}
+                        exclusive
+                        onChange={(e, newMode) => newMode && setViewMode(newMode)}
+                        size={isMobile ? "small" : "medium"}
+                        sx={{
+                          bgcolor: 'rgba(15, 43, 94, 0.06)',
+                          borderRadius: 999,
+                          p: '4px',
+                          gap: 0.5,
+                          '& .MuiToggleButton-root': {
+                            borderRadius: 999,
+                            border: 'none',
+                            px: 2,
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            '&.Mui-selected': {
+                              bgcolor: '#ffffff',
+                              boxShadow: '0 2px 10px rgba(10, 42, 90, 0.18)',
+                            },
+                          },
+                        }}
+                      >
                         <ToggleButton value="overview">Overview</ToggleButton>
                         <ToggleButton value="timeline"><Timeline sx={{ mr: 1 }} />Timeline</ToggleButton>
                         <ToggleButton value="map"><Map sx={{ mr: 1 }} />Map</ToggleButton>
@@ -762,33 +834,45 @@ const TrackFlightPage = () => {
                                 <Typography variant="body2" color="text.secondary">Flight Progress</Typography>
                                 <Typography variant="body2" fontWeight="600">{trackedFlight.progress}%</Typography>
                               </Box>
-                              <LinearProgress variant="determinate" value={trackedFlight.progress} sx={{ height: 8, borderRadius: 4, bgcolor: alpha('#1976d2', 0.1) }} />
+                              <LinearProgress
+                                variant="determinate"
+                                value={trackedFlight.progress}
+                                sx={{
+                                  height: 8,
+                                  borderRadius: 999,
+                                  bgcolor: 'rgba(13, 71, 161, 0.1)',
+                                  '& .MuiLinearProgress-bar': {
+                                    borderRadius: 999,
+                                    background: 'linear-gradient(90deg, #0a2a5a 0%, #1976d2 100%)',
+                                  },
+                                }}
+                              />
                             </Box>
                           )}
                           <Grid container spacing={2} sx={{ mb: 4 }}>
                             <Grid size={{ xs: 6, sm: 3 }}>
-                              <Paper sx={{ p: 2, textAlign: 'center', borderRadius: 2 }}>
+                              <Paper sx={{ p: 2, textAlign: 'center', borderRadius: '18px', bgcolor: 'rgba(255, 255, 255, 0.82)', backdropFilter: 'blur(12px) saturate(150%)', WebkitBackdropFilter: 'blur(12px) saturate(150%)', border: '1px solid rgba(255, 255, 255, 0.9)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.9)' }}>
                                 <Speed sx={{ color: 'primary.main', mb: 1 }} />
                                 <Typography variant="caption" color="text.secondary" display="block">Speed</Typography>
                                 <Typography variant="h6" fontWeight="700">{trackedFlight.speed || '0'} km/h</Typography>
                               </Paper>
                             </Grid>
                             <Grid size={{ xs: 6, sm: 3 }}>
-                              <Paper sx={{ p: 2, textAlign: 'center', borderRadius: 2 }}>
+                              <Paper sx={{ p: 2, textAlign: 'center', borderRadius: '18px', bgcolor: 'rgba(255, 255, 255, 0.82)', backdropFilter: 'blur(12px) saturate(150%)', WebkitBackdropFilter: 'blur(12px) saturate(150%)', border: '1px solid rgba(255, 255, 255, 0.9)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.9)' }}>
                                 <Height sx={{ color: 'primary.main', mb: 1 }} />
                                 <Typography variant="caption" color="text.secondary" display="block">Altitude</Typography>
                                 <Typography variant="h6" fontWeight="700">{trackedFlight.altitude?.toLocaleString() || '0'} ft</Typography>
                               </Paper>
                             </Grid>
                             <Grid size={{ xs: 6, sm: 3 }}>
-                              <Paper sx={{ p: 2, textAlign: 'center', borderRadius: 2 }}>
+                              <Paper sx={{ p: 2, textAlign: 'center', borderRadius: '18px', bgcolor: 'rgba(255, 255, 255, 0.82)', backdropFilter: 'blur(12px) saturate(150%)', WebkitBackdropFilter: 'blur(12px) saturate(150%)', border: '1px solid rgba(255, 255, 255, 0.9)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.9)' }}>
                                 <Flight sx={{ color: 'primary.main', mb: 1 }} />
                                 <Typography variant="caption" color="text.secondary" display="block">Distance</Typography>
                                 <Typography variant="h6" fontWeight="700">{trackedFlight.distance}</Typography>
                               </Paper>
                             </Grid>
                             <Grid size={{ xs: 6, sm: 3 }}>
-                              <Paper sx={{ p: 2, textAlign: 'center', borderRadius: 2 }}>
+                              <Paper sx={{ p: 2, textAlign: 'center', borderRadius: '18px', bgcolor: 'rgba(255, 255, 255, 0.82)', backdropFilter: 'blur(12px) saturate(150%)', WebkitBackdropFilter: 'blur(12px) saturate(150%)', border: '1px solid rgba(255, 255, 255, 0.9)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.9)' }}>
                                 <AccessTime sx={{ color: 'primary.main', mb: 1 }} />
                                 <Typography variant="caption" color="text.secondary" display="block">Duration</Typography>
                                 <Typography variant="h6" fontWeight="700">{trackedFlight.duration}</Typography>
@@ -798,7 +882,7 @@ const TrackFlightPage = () => {
                           <Grid container spacing={3}>
                             <Grid size={{ xs: 12, md: 6 }}>
                               <Typography variant="h6" gutterBottom fontWeight="600">Departure</Typography>
-                              <Paper sx={{ p: 2, borderRadius: 2 }}>
+                              <Paper sx={{ p: 2, borderRadius: '18px', bgcolor: 'rgba(255, 255, 255, 0.82)', backdropFilter: 'blur(12px) saturate(150%)', WebkitBackdropFilter: 'blur(12px) saturate(150%)', border: '1px solid rgba(255, 255, 255, 0.9)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.9)' }}>
                                 <Grid container spacing={2}>
                                   <Grid size={6}><Typography variant="caption" color="text.secondary">Scheduled</Typography><Typography variant="body2" fontWeight="500">{formatTime(trackedFlight.departure.scheduled)}</Typography></Grid>
                                   <Grid size={6}><Typography variant="caption" color="text.secondary">Estimated</Typography><Typography variant="body2" fontWeight="500">{formatTime(trackedFlight.departure.estimated || trackedFlight.departure.scheduled)}</Typography></Grid>
@@ -809,7 +893,7 @@ const TrackFlightPage = () => {
                             </Grid>
                             <Grid size={{ xs: 12, md: 6 }}>
                               <Typography variant="h6" gutterBottom fontWeight="600">Arrival</Typography>
-                              <Paper sx={{ p: 2, borderRadius: 2 }}>
+                              <Paper sx={{ p: 2, borderRadius: '18px', bgcolor: 'rgba(255, 255, 255, 0.82)', backdropFilter: 'blur(12px) saturate(150%)', WebkitBackdropFilter: 'blur(12px) saturate(150%)', border: '1px solid rgba(255, 255, 255, 0.9)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.9)' }}>
                                 <Grid container spacing={2}>
                                   <Grid size={6}><Typography variant="caption" color="text.secondary">Scheduled</Typography><Typography variant="body2" fontWeight="500">{formatTime(trackedFlight.arrival.scheduled)}</Typography></Grid>
                                   <Grid size={6}><Typography variant="caption" color="text.secondary">Estimated</Typography><Typography variant="body2" fontWeight="500">{formatTime(trackedFlight.arrival.estimated || trackedFlight.arrival.scheduled)}</Typography></Grid>
@@ -841,20 +925,34 @@ const TrackFlightPage = () => {
                         <Box><Typography variant="h6" gutterBottom fontWeight="600" sx={{ mb: 2 }}>Flight Path</Typography><FlightMapVisualization from={trackedFlight.from} to={trackedFlight.to} progress={trackedFlight.progress || 0} /></Box>
                       )}
                     </Box>
-                    <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider', bgcolor: alpha('#1976d2', 0.02) }}>
+                    <Box sx={{ p: 2, borderTop: '1px solid rgba(15, 43, 94, 0.08)', bgcolor: 'rgba(255, 255, 255, 0.55)' }}>
                       <Typography variant="caption" color="text.secondary">Last updated: {new Date(trackedFlight.lastUpdated).toLocaleTimeString()}</Typography>
                     </Box>
                   </Paper>
-                </motion.div>
+                </Motion.div>
               </AnimatePresence>
             ) : (
-              <Paper sx={{ p: { xs: 4, sm: 6 }, textAlign: "center", borderRadius: 3, border: "2px dashed", borderColor: "divider", minHeight: { xs: 400, md: 500 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 260, damping: 20 }}>
+              <Paper sx={{ p: { xs: 4, sm: 6 }, textAlign: "center", borderRadius: '28px', bgcolor: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)', border: "2px dashed rgba(15, 43, 94, 0.18)", minHeight: { xs: 400, md: 500 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <Motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 260, damping: 20 }}>
                   <AirplanemodeActive sx={{ fontSize: { xs: 60, md: 80 }, color: "action.disabled", mb: 3 }} />
-                </motion.div>
+                </Motion.div>
                 <Typography variant="h5" color="text.secondary" gutterBottom fontWeight="600">No Flight Tracked</Typography>
                 <Typography variant="body1" color="text.secondary" paragraph sx={{ maxWidth: 500 }}>Enter a flight number above to track real-time status, get live updates, and monitor your journey.</Typography>
-                <Button variant="contained" startIcon={<SearchIcon />} onClick={() => inputRef.current?.focus()} sx={{ mt: 2 }}>Search Flight</Button>
+                <Button
+                  variant="contained"
+                  startIcon={<SearchIcon />}
+                  onClick={() => inputRef.current?.focus()}
+                  sx={{
+                    mt: 2,
+                    borderRadius: 999,
+                    px: 3,
+                    background: 'linear-gradient(135deg, #0a2a5a 0%, #0d47a1 100%)',
+                    boxShadow: '0 12px 28px -12px rgba(10, 42, 90, 0.6)',
+                    '&:hover': { background: 'linear-gradient(135deg, #081f45 0%, #0a2a5a 100%)' },
+                  }}
+                >
+                  Search Flight
+                </Button>
               </Paper>
             )}
           </Grid>
@@ -863,16 +961,28 @@ const TrackFlightPage = () => {
         <QRScannerModal open={showQRScanner} onClose={() => setShowQRScanner(false)} onScan={handleQRScan} />
         <Modal open={shareDialog} onClose={() => setShareDialog(false)}>
           <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: { xs: '90%', sm: 400 }, outline: 'none' }}>
-            <Paper sx={{ p: 3, borderRadius: 3 }}>
+            <Paper sx={{ p: 3, borderRadius: '28px', bgcolor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)', border: '1px solid rgba(255, 255, 255, 0.8)', boxShadow: '0 24px 56px -24px rgba(10, 42, 90, 0.4)' }}>
               <Typography variant="h6" gutterBottom fontWeight="600">Share Flight</Typography>
               <TextField fullWidth value={window.location.href} variant="outlined" size="small" sx={{ mt: 2, mb: 2 }} InputProps={{ readOnly: true }} />
-              <Button fullWidth variant="contained" onClick={() => { navigator.clipboard.writeText(window.location.href); showNotification("Link copied to clipboard!", "success"); setShareDialog(false); }}>Copy Link</Button>
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={() => { navigator.clipboard.writeText(window.location.href); showNotification("Link copied to clipboard!", "success"); setShareDialog(false); }}
+                sx={{
+                  borderRadius: 999,
+                  py: 1.25,
+                  background: 'linear-gradient(135deg, #0a2a5a 0%, #0d47a1 100%)',
+                  '&:hover': { background: 'linear-gradient(135deg, #081f45 0%, #0a2a5a 100%)' },
+                }}
+              >
+                Copy Link
+              </Button>
             </Paper>
           </Box>
         </Modal>
 
         <Snackbar open={notification.open} autoHideDuration={4000} onClose={() => setNotification({ ...notification, open: false })} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
-          <Alert onClose={() => setNotification({ ...notification, open: false })} severity={notification.severity} sx={{ borderRadius: 2 }}>{notification.message}</Alert>
+          <Alert onClose={() => setNotification({ ...notification, open: false })} severity={notification.severity} sx={{ borderRadius: '16px', backdropFilter: 'blur(16px) saturate(160%)', WebkitBackdropFilter: 'blur(16px) saturate(160%)' }}>{notification.message}</Alert>
         </Snackbar>
       </Container>
     </Box>

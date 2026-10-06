@@ -1,8 +1,10 @@
 import React from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Box } from "@mui/material";
+import { MotionConfig } from "framer-motion";
 import { Analytics } from "@vercel/analytics/react";
 import Navbar from "./components/Navbar";
+import TabBar from "./components/TabBar";
 import HomePage from "./pages/HomePage";
 import TrackFlightPage from "./pages/TrackFlightPage";
 import BoardingPass from "./pages/BookedFlightPage";
@@ -18,6 +20,7 @@ function App() {
     location.pathname === "/login" || location.pathname === "/register";
 
   return (
+    <MotionConfig reducedMotion="user">
     <Box
       sx={{
         width: "100%",
@@ -68,12 +71,16 @@ function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
 
+        {/* iOS-style bottom tab bar on phones (matches navbar visibility) */}
+        {!hideNavbar && <TabBar />}
+
         {/* 👇 Scroll to top on every route change */}
         <ScrollToTop />
       </Box>
 
       <Analytics />
     </Box>
+    </MotionConfig>
   );
 }
 
