@@ -1,11 +1,25 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import { Box, CircularProgress } from "@mui/material";
 import PageTransition from "./components/PageTransition";
-import HomePage from "./pages/HomePage";
-import TrackFlightPage from "./pages/TrackFlightPage";
-import BoardingPass from "./pages/BookedFlightPage";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+
+/**
+ * Route-level code splitting: every screen arrives in its own chunk, so the
+ * first paint only ships the shell. The heavy libraries each screen needs —
+ * html2canvas on the boarding pass, gsap on the home page — travel with it
+ * instead of sitting in the entry bundle.
+ */
+const HomePage = lazy(() => import("./pages/HomePage"));
+const TrackFlightPage = lazy(() => import("./pages/TrackFlightPage"));
+const BoardingPass = lazy(() => import("./pages/BookedFlightPage"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+
+const PageFallback = () => (
+  <Box sx={{ minHeight: "60vh", display: "grid", placeItems: "center" }}>
+    <CircularProgress size={28} />
+  </Box>
+);
 
 /**
  * The route table.
@@ -14,10 +28,15 @@ import Register from "./pages/Register";
  * locations at once: the current screen and the one behind it. `location` picks
  * which to render, and `animated` turns the page transition off for the screen
  * revealed underneath the finger — it should already be at rest.
+ *
+ * Each screen gets its own Suspense boundary so a chunk still in flight never
+ * blanks the screen being swiped away from.
  */
 const AppRoutes = ({ location, isLoggedIn, animated = true }) => {
-  const page = (element, variant) =>
-    animated ? <PageTransition variant={variant}>{element}</PageTransition> : element;
+  const page = (element, variant) => {
+    const content = <Suspense fallback={<PageFallback />}>{element}</Suspense>;
+    return animated ? <PageTransition variant={variant}>{content}</PageTransition> : content;
+  };
 
   return (
     <Routes location={location}>
