@@ -8,6 +8,20 @@
 
     <!-- Installable app (PWA): allows Add to Home Screen / Install app -->
     <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Hero LCP: warm the Wikimedia connections (Special:FilePath redirects to
+         upload.wikimedia.org for the hero, thumb.wikimedia.org for the cards)
+         and preload the hero background with the exact URL the CSS fetches so
+         the browser dedupes it instead of downloading it twice. -->
+    <link rel="preconnect" href="https://commons.wikimedia.org" />
+    <link rel="preconnect" href="https://upload.wikimedia.org" />
+    <link rel="preconnect" href="https://thumb.wikimedia.org" />
+    <link
+      rel="preload"
+      as="image"
+      fetchpriority="high"
+      href="https://commons.wikimedia.org/wiki/Special:FilePath/A6-EDY_A380_Emirates_31_jan_2013_jfk_%288442269364%29_%28cropped%29.jpg?width=1600"
+    />
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
     <meta name="application-name" content="light American Airlines" />

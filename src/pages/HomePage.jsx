@@ -35,7 +35,7 @@ import {
   Star,
   CalendarToday
 } from "@mui/icons-material";
-import womanImage from "../assets/images/lady.PNG";
+import womanImage from "../assets/images/lady.webp";
 import { keyframes } from "@mui/system";
 
 // Animation keyframes
@@ -64,21 +64,40 @@ const bounceScroll = keyframes`
   100% { transform: translateY(30px); opacity: 0; }
 `;
 
+/**
+ * Photography for the carousel, hero and destination cards.
+ *
+ * Served from Wikimedia Commons via Special:FilePath, which hands back a
+ * properly processed image at the width it's asked for — the raw /thumb/ paths
+ * are not reliably hotlinkable. Requesting a width per use keeps the small
+ * destination cards from pulling hero-sized files.
+ */
+const WIKIMEDIA_FILE_PATH = "https://commons.wikimedia.org/wiki/Special:FilePath/";
+const wikiImage = (file, width) => `${WIKIMEDIA_FILE_PATH}${file}?width=${width}`;
+
+// Top banner: three aviation scenes that cycle.
+/* Dissolves the traveller cutout into the hero's base: fully opaque until
+   ~78% of her height, then an eased ramp to fully transparent at the bottom
+   so the PNG's flat waist cut never shows against the background. */
+const waistFade =
+  "linear-gradient(to bottom, #000 0%, #000 72%, rgba(0,0,0,0.72) 82%, rgba(0,0,0,0.34) 92%, transparent 100%)";
+
 const carouselImages = [
-  "https://images.unsplash.com/photo-1503424886307-b090341d25d1?auto=format&fit=crop&w=2000&q=80",
-  "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&w=2000&q=80",
-  "https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?auto=format&fit=crop&w=2000&q=80",
+  wikiImage("Cathay_Pacific_Boeing_777-200%3B_B-HNL%40HKG.jpg", 1600),
+  wikiImage("Aerial_wiew_of_Los_Angeles_International_Airport%2C_Juy_2022_%282%29.jpg", 1600),
+  wikiImage("EGLF_-_Airbus_A350-941_-_F-WZNW.jpg", 1600),
 ];
 
+// One landmark per destination — all landscape, so the card crop stays flattering.
 const popularDestinations = [
-  { city: "New York", code: "JFK", image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=300&q=80", deals: 24 },
-  { city: "Los Angeles", code: "LAX", image: "https://images.unsplash.com/photo-1515896769750-31548aa180f9?auto=format&fit=crop&w=300&q=80", deals: 18 },
-  { city: "Miami", code: "MIA", image: "https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?auto=format&fit=crop&w=300&q=80", deals: 32 },
-  { city: "Chicago", code: "ORD", image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=300&q=80", deals: 15 },
-  { city: "London", code: "LHR", image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=300&q=80", deals: 28 },
-  { city: "Tokyo", code: "NRT", image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=300&q=80", deals: 21 },
-  { city: "Dubai", code: "DXB", image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=300&q=80", deals: 19 },
-  { city: "Sydney", code: "SYD", image: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=300&q=80", deals: 16 },
+  { city: "New York", code: "JFK", image: wikiImage("Lights_of_Rockefeller_Center_during_sunset.jpg", 480), deals: 24 },
+  { city: "Los Angeles", code: "LAX", image: wikiImage("Hollywood_sign_%288485145044%29.jpg", 480), deals: 18 },
+  { city: "Miami", code: "MIA", image: wikiImage("Ocean_drive_day_2009j.JPG", 480), deals: 32 },
+  { city: "Chicago", code: "ORD", image: wikiImage("Chicago_River_ferry_b.jpg", 480), deals: 15 },
+  { city: "London", code: "LHR", image: wikiImage("Tower_Bridge_at_Dawn.jpg", 480), deals: 28 },
+  { city: "Tokyo", code: "NRT", image: wikiImage("Shibuya_Crossing%2C_Aerial.jpg", 480), deals: 21 },
+  { city: "Dubai", code: "DXB", image: wikiImage("Burj_Khalifa_%28worlds_tallest_building%29_and_the_Dubai_skyline_%2825781049892%29.jpg", 480), deals: 19 },
+  { city: "Sydney", code: "SYD", image: wikiImage("Sydney_Opera_House_and_Harbour_Bridge_Dusk_%282%29_2019-06-21.jpg", 480), deals: 16 },
 ];
 
 const features = [
@@ -216,7 +235,7 @@ const HomePage = () => {
                 rgba(20, 90, 180, 0.95) 40%, 
                 rgba(40, 120, 220, 0.92) 80%, 
                 rgba(60, 150, 250, 0.9) 100%),
-              url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=2000&q=80')
+              url('${wikiImage("A6-EDY_A380_Emirates_31_jan_2013_jfk_%288442269364%29_%28cropped%29.jpg", 1600)}')
             `,
             backgroundSize: "cover",
             backgroundPosition: "center",
@@ -315,6 +334,9 @@ const HomePage = () => {
               component="img"
               src={womanImage}
               alt="Professional Traveler"
+              fetchPriority="high"
+              loading="eager"
+              decoding="async"
               sx={{
                 position: "absolute",
                 left: { xs: "-15%", sm: "-10%", md: "-5%", lg: "5%" },
@@ -330,6 +352,13 @@ const HomePage = () => {
                 animation: `${slideInFromLeft} 1s ease-out`,
                 objectFit: "contain",
                 maxWidth: { xs: "70%", sm: "60%", md: "50%", lg: "45%" },
+                /* The cutout ends in a flat horizontal edge at her waist, which
+                   read as a hard line against the hero. Fading the last fifth
+                   dissolves her into the base so the cut is invisible. The mask
+                   is applied after `filter`, so the drop shadow fades with her
+                   instead of hanging under a see-through edge. */
+                maskImage: `${waistFade}`,
+                WebkitMaskImage: `${waistFade}`,
               }}
             />
           </Fade>

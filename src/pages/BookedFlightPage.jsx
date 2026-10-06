@@ -53,9 +53,9 @@ const NOTCH = "#F2F2F7"; // iOS systemGroupedBackground — matches page bg so n
 // ---------- Static Fallback ----------
 const WENDY_FLIGHT = {
   flight_number: 'AA173',
-  airline_name: 'American',
+  airline_name: 'American Airlines',
   airline_code: 'AA',
-  operated_by: 'American',
+  operated_by: 'American Airlines',
   departure_airport_code: 'LHR',
   departure_city: 'London, UK',
   arrival_airport_code: 'RDU',

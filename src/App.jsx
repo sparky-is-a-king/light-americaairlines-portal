@@ -1,20 +1,21 @@
 import React from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Box } from "@mui/material";
 import { MotionConfig } from "framer-motion";
 import { Analytics } from "@vercel/analytics/react";
 import Navbar from "./components/Navbar";
 import TabBar from "./components/TabBar";
-import HomePage from "./pages/HomePage";
-import TrackFlightPage from "./pages/TrackFlightPage";
-import BoardingPass from "./pages/BookedFlightPage";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import PageStack from "./components/PageStack";
+import { useNavigationHistory } from "./utils/navigation";
 import ScrollToTop from "./components/ScrollToTop"; // 👈 import the new component
 
 function App() {
   const location = useLocation();
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+
+  // Tracks where we came from, so the push transition can mirror the motion and
+  // the edge-swipe can reveal the previous screen (see utils/navigation.js).
+  const { previousLocation, canGoBack } = useNavigationHistory(location);
 
   const hideNavbar =
     location.pathname === "/login" || location.pathname === "/register";
@@ -44,32 +45,13 @@ function App() {
           overflowX: "clip",
         }}
       >
-        <Routes>
-          <Route
-            path="/login"
-            element={isLoggedIn ? <Navigate to="/" /> : <Login />}
-          />
-          <Route
-            path="/register"
-            element={isLoggedIn ? <Navigate to="/" /> : <Register />}
-          />
-
-          <Route
-            path="/"
-            element={isLoggedIn ? <HomePage /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/track"
-            element={isLoggedIn ? <TrackFlightPage /> : <Navigate to="/login" />}
-          />
-
-          <Route
-            path="/boarding-pass/:flightId"
-            element={isLoggedIn ? <BoardingPass /> : <Navigate to="/login" />}
-          />
-
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
+        <PageStack
+          location={location}
+          previousLocation={previousLocation}
+          canGoBack={canGoBack}
+          isLoggedIn={isLoggedIn}
+          hidden={hideNavbar}
+        />
 
         {/* iOS-style bottom tab bar on phones (matches navbar visibility) */}
         {!hideNavbar && <TabBar />}
