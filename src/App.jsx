@@ -53,7 +53,7 @@ function App() {
           hidden={hideNavbar}
         />
 
-        {/* iOS-style bottom tab bar on phones (matches navbar visibility) */}
+        {/* iOS-style bottom dock / tab bar (matches navbar visibility) */}
         {!hideNavbar && <TabBar />}
 
         {/* 👇 Scroll to top on every route change */}

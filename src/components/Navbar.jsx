@@ -17,6 +17,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import InstallAppButton from "./InstallAppButton";
+import Magnet from "./reactbits/Magnet";
 import { ios, glassSx } from "../theme";
 
 const navLinks = [
@@ -54,6 +55,12 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isDesktop = useMediaQuery("(min-width:900px)");
+
+  // The magnet is a pointer flourish: only run it for a real cursor, and never
+  // for guests who asked for reduced motion.
+  const hasPointer = useMediaQuery("(hover: hover) and (pointer: fine)");
+  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const magnetEnabled = hasPointer && !prefersReducedMotion;
 
   // Tab-bar minimize behaviour: hide on scroll down, reveal on scroll up.
   useEffect(() => {
@@ -167,6 +174,7 @@ const Navbar = () => {
             }}
           >
             {/* === Logo === */}
+            <Magnet disabled={!magnetEnabled} padding={70} magnetStrength={7}>
             <Box
               component={Link}
               to="/"
@@ -200,13 +208,19 @@ const Navbar = () => {
                 American Airlines
               </Typography>
             </Box>
+            </Magnet>
 
             {/* === Desktop Links === */}
             {isDesktop && (
               <Box sx={{ display: "flex", gap: 0.5, alignItems: "center" }}>
                 {navLinks.map((item) => (
-                  <Button
+                  <Magnet
                     key={item.title}
+                    disabled={!magnetEnabled}
+                    padding={50}
+                    magnetStrength={6}
+                  >
+                  <Button
                     onClick={item.title === "Book Flight" ? scrollToBookFlight : undefined}
                     component={item.title === "Book Flight" ? undefined : Link}
                     to={item.title === "Book Flight" ? undefined : item.path}
@@ -224,6 +238,7 @@ const Navbar = () => {
                   >
                     {item.title}
                   </Button>
+                  </Magnet>
                 ))}
 
                 {/* === Language Indicator with US Flag === */}
