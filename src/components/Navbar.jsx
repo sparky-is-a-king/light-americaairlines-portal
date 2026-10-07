@@ -13,18 +13,11 @@ import {
 } from "@mui/material";
 import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
 import LogoutIcon from "@mui/icons-material/Logout";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import InstallAppButton from "./InstallAppButton";
 import Magnet from "./reactbits/Magnet";
 import { ios, glassSx } from "../theme";
-
-const navLinks = [
-  { title: "Home", path: "/" },
-  { title: "Book Flight", path: "/#booking-form" },
-  { title: "Track Flight", path: "/track" },
-];
 
 // Language options
 const languages = [
@@ -41,19 +34,18 @@ const languages = [
  * iOS-style floating navigation: a frosted "Liquid Glass" capsule that hovers
  * above the content layer (per Apple's guidance, navigation lives on its own
  * translucent layer). Like the iOS tab bar it minimizes while scrolling down
- * and slides back in when scrolling up. On phones the bottom TabBar takes over
- * navigation, so this bar slims down to logo + install + logout + overflow menu.
+ * and slides back in when scrolling up. Home / Book / Track live in the bottom
+ * Dock on every width, so this bar carries the brand and the session controls
+ * (language, install, logout) instead of a second set of destination links.
  */
 const Navbar = () => {
   const [loading, setLoading] = useState(false);
   const [languageAnchor, setLanguageAnchor] = useState(null);
   const [selectedLanguage, setSelectedLanguage] = useState(languages[0]); // Default to US
-  const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
   const [minimized, setMinimized] = useState(false);
   const lastScrollY = useRef(0);
 
   const navigate = useNavigate();
-  const location = useLocation();
   const isDesktop = useMediaQuery("(min-width:900px)");
 
   // The magnet is a pointer flourish: only run it for a real cursor, and never
@@ -90,21 +82,6 @@ const Navbar = () => {
     console.log(`Language changed to: ${language.name}`);
   };
 
-  // Handle "Book Flight" scroll smoothly
-  const scrollToBookFlight = () => {
-    const scrollToSection = () => {
-      const section = document.getElementById("booking-form");
-      if (section) section.scrollIntoView({ behavior: "smooth" });
-    };
-
-    if (location.pathname !== "/") {
-      navigate("/", { replace: false });
-      setTimeout(scrollToSection, 150);
-    } else {
-      scrollToSection();
-    }
-  };
-
   // Simulate network check
   const simulateNetworkCheck = () => {
     return new Promise((resolve) => {
@@ -130,10 +107,6 @@ const Navbar = () => {
       setLoading(false);
     }
   };
-
-  const isActive = (item) =>
-    item.title !== "Book Flight" &&
-    (item.path === "/" ? location.pathname === "/" : location.pathname === item.path);
 
   return (
     <>
@@ -210,38 +183,11 @@ const Navbar = () => {
             </Box>
             </Magnet>
 
-            {/* === Desktop Links === */}
+            {/* === Desktop controls: language, install, session === */}
             {isDesktop && (
               <Box sx={{ display: "flex", gap: 0.5, alignItems: "center" }}>
-                {navLinks.map((item) => (
-                  <Magnet
-                    key={item.title}
-                    disabled={!magnetEnabled}
-                    padding={50}
-                    magnetStrength={6}
-                  >
-                  <Button
-                    onClick={item.title === "Book Flight" ? scrollToBookFlight : undefined}
-                    component={item.title === "Book Flight" ? undefined : Link}
-                    to={item.title === "Book Flight" ? undefined : item.path}
-                    sx={{
-                      color: isActive(item) ? ios.blue : ios.navy,
-                      fontWeight: 700,
-                      px: 2,
-                      py: 0.9,
-                      borderRadius: 999,
-                      bgcolor: isActive(item) ? "rgba(13, 71, 161, 0.1)" : "transparent",
-                      "&:hover": {
-                        bgcolor: "rgba(13, 71, 161, 0.08)",
-                      },
-                    }}
-                  >
-                    {item.title}
-                  </Button>
-                  </Magnet>
-                ))}
-
                 {/* === Language Indicator with US Flag === */}
+                <Magnet disabled={!magnetEnabled} padding={50} magnetStrength={6}>
                 <Button
                   onClick={handleLanguageClick}
                   sx={{
@@ -264,6 +210,7 @@ const Navbar = () => {
                     <ArrowDropDownIcon />
                   </Box>
                 </Button>
+                </Magnet>
 
                 {/* Language Menu — Liquid Glass popover */}
                 <Menu
@@ -326,9 +273,12 @@ const Navbar = () => {
                 </Menu>
 
                 {/* Install (only rendered when the browser can actually install) */}
-                <InstallAppButton />
+                <Magnet disabled={!magnetEnabled} padding={50} magnetStrength={6}>
+                  <InstallAppButton />
+                </Magnet>
 
                 {/* Desktop Logout button */}
+                <Magnet disabled={!magnetEnabled} padding={50} magnetStrength={6}>
                 <Button
                   startIcon={
                     loading ? <CircularProgress size={20} sx={{ color: ios.navy }} /> : <LogoutIcon />
@@ -346,10 +296,11 @@ const Navbar = () => {
                 >
                   Logout
                 </Button>
+                </Magnet>
               </Box>
             )}
 
-            {/* === Mobile controls: install + logout + overflow menu === */}
+            {/* === Mobile controls: language, install, session === */}
             {!isDesktop && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 {/* Language chip (compact) */}
@@ -381,52 +332,6 @@ const Navbar = () => {
                 >
                   {loading ? <CircularProgress size={20} sx={{ color: ios.navy }} /> : <LogoutIcon />}
                 </IconButton>
-                <IconButton
-                  aria-label="More options"
-                  onClick={(e) => setMobileMenuAnchor(e.currentTarget)}
-                  sx={{
-                    color: ios.navy,
-                    bgcolor: "rgba(13, 71, 161, 0.08)",
-                    "&:hover": { bgcolor: "rgba(13, 71, 161, 0.14)" },
-                  }}
-                >
-                  <MoreVertIcon />
-                </IconButton>
-
-                {/* Overflow menu (book / track) */}
-                <Menu
-                  anchorEl={mobileMenuAnchor}
-                  open={Boolean(mobileMenuAnchor)}
-                  onClose={() => setMobileMenuAnchor(null)}
-                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                  transformOrigin={{ vertical: "top", horizontal: "right" }}
-                  PaperProps={{
-                    sx: {
-                      ...glassSx,
-                      mt: 1.5,
-                      minWidth: 190,
-                      borderRadius: 4,
-                      p: 0.5,
-                      boxShadow: ios.shadowLift,
-                    },
-                  }}
-                >
-                  {navLinks
-                    .filter((item) => item.title !== "Home")
-                    .map((item) => (
-                      <MenuItem
-                        key={item.title}
-                        onClick={() => {
-                          setMobileMenuAnchor(null);
-                          if (item.title === "Book Flight") scrollToBookFlight();
-                          else navigate(item.path);
-                        }}
-                        sx={{ py: 1.25, gap: 1.5, fontWeight: 600 }}
-                      >
-                        {item.title}
-                      </MenuItem>
-                    ))}
-                </Menu>
               </Box>
             )}
           </Box>
