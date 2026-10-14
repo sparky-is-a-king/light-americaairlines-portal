@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { ThemeProvider } from "@mui/material/styles";
 import theme from "./theme";
+import LocaleProvider from "./LocaleProvider";
 // Global reset: box-sizing, body margin and #root centring. Without this the
 // browser's own 8px body margin and content-box sizing push full-width sections
 // off centre (and clip them on the right).
@@ -11,9 +12,11 @@ import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <ThemeProvider theme={theme}>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <LocaleProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </LocaleProvider>
   </ThemeProvider>
 );
 

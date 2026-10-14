@@ -6,6 +6,7 @@ import RadarIcon from "@mui/icons-material/Radar";
 import { useLocation, useNavigate } from "react-router-dom";
 import Dock from "./reactbits/Dock";
 import { haptic } from "../utils/haptics";
+import { useLocale } from "../i18n";
 
 const BOOK_SECTION_ID = "booking-form";
 
@@ -20,13 +21,16 @@ const BOOK_SECTION_ID = "booking-form";
  * proximity magnification is visible, and it lives where a cursor is — so it
  * keeps the phone layout intact and gains the desktop one.
  */
+// `labelKey` is looked up through t() at render time so the dock follows the
+// chosen locale.
 const tabs = [
-  { label: "Home", icon: HomeIcon, path: "/" },
-  { label: "Book", icon: FlightTakeoffIcon, action: "book" },
-  { label: "Track", icon: RadarIcon, path: "/track" },
+  { labelKey: "dock.home", icon: HomeIcon, path: "/" },
+  { labelKey: "dock.book", icon: FlightTakeoffIcon, action: "book" },
+  { labelKey: "dock.track", icon: RadarIcon, path: "/track" },
 ];
 
 const TabBar = () => {
+  const { t } = useLocale();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -61,7 +65,7 @@ const TabBar = () => {
   const dockItems = tabs.map((tab) => {
     const Icon = tab.icon;
     return {
-      label: tab.label,
+      label: t(tab.labelKey),
       active: isActive(tab),
       onClick: () => handleTab(tab),
       icon: (
@@ -77,7 +81,7 @@ const TabBar = () => {
         >
           <Icon sx={{ fontSize: 22 }} />
           <Box sx={{ fontSize: 10, fontWeight: 700, letterSpacing: "-0.01em", whiteSpace: "nowrap" }}>
-            {tab.label}
+            {t(tab.labelKey)}
           </Box>
         </Box>
       ),

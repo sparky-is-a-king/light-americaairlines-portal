@@ -1,22 +1,10 @@
 import React from "react";
 import { Card, CardContent, Typography, Box, Button } from "@mui/material";
 import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
-
-// Updated flight data with realistic airlines
-const flights = [
-  { airline: "Delta Airlines", from: "JKIA", to: "ITIA", time: "14h 45m", price: "2100" },
-  { airline: "British Airways", from: "DPS", to: "CGK", time: "10h 50m", price: "2020" },
-  { airline: "Qatar Airways", from: "JKIA", to: "ITIA", time: "12h 30m", price: "1900" },
-  { airline: "Emirates", from: "DPS", to: "CGK", time: "12h 15m", price: "2160" },
-  { airline: "Ethiopian Airlines", from: "JKIA", to: "ITIA", time: "13h 10m", price: "1800" },
-  { airline: "Aeroflot Russian Airlines", from: "DPS", to: "CGK", time: "13h 25m", price: "2800" },
-  { airline: "Air Canada", from: "JKIA", to: "CGK", time: "14h 00m", price: "2200" },
-  { airline: "Singapore Airlines", from: "DPS", to: "ITIA", time: "14h 30m", price: "2400" },
-  { airline: "Qantas Airways", from: "JKIA", to: "CGK", time: "15h 15m", price: "2600" },
-  { airline: "Turkish Airlines", from: "CGK", to: "ITIA", time: "15h 45m", price: "2800" },
-];
+import { useLocale } from "../i18n";
 
 const FlightCard = ({ flight, onBook }) => {
+  const { t } = useLocale();
   return (
     <Card
       elevation={0}
@@ -98,7 +86,7 @@ const FlightCard = ({ flight, onBook }) => {
         >
           <Box sx={{ textAlign: "right" }}>
             <Typography sx={{ color: "#94a3b8", fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.06em" }}>
-              FROM
+              {t("flight.from")}
             </Typography>
             <Typography
               sx={{ fontWeight: 800, color: "#0d47a1", fontSize: { xs: "1rem", sm: "1.15rem" }, lineHeight: 1.2 }}
@@ -121,7 +109,7 @@ const FlightCard = ({ flight, onBook }) => {
               "&:hover": { background: "linear-gradient(135deg, #081f45 0%, #0a2a5a 100%)" },
             }}
           >
-            Book
+            {t("flight.book")}
           </Button>
         </Box>
       </CardContent>
@@ -129,4 +117,4 @@ const FlightCard = ({ flight, onBook }) => {
   );
 };
 
-export { FlightCard, flights };
+export { FlightCard };

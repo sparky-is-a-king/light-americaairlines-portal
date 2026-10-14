@@ -25,6 +25,7 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
 import { supabase } from "../supabaseClient";
+import { useLocale } from "../i18n";
 
 const float = keyframes`
   0%, 100% { transform: translateY(0px); }
@@ -32,6 +33,7 @@ const float = keyframes`
 `;
 
 export default function Login() {
+  const { t } = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -104,7 +106,7 @@ export default function Login() {
       navigate("/");
     } catch (err) {
       console.error("Login error:", err.message);
-      setError(err.message || "Invalid credentials. Please try again.");
+      setError(err.message || t("auth.error.fallback"));
     } finally {
       setLoading(false);
     }
@@ -202,23 +204,23 @@ export default function Login() {
                   </Typography>
                 </Box>
                 <Typography variant="h4" sx={{ color: "white", fontWeight: 600, mb: 3, fontSize: "2rem" }}>
-                  Welcome Back!
+                  {t("auth.welcome")}
                 </Typography>
                 <Typography variant="body1" sx={{ color: alpha("#fff", 0.8), mb: 4, fontSize: "1.1rem" }}>
-                  Access your dashboard, manage flights, and track your American Airlines operations with our secure enterprise platform.
+                  {t("auth.welcomeBlurb")}
                 </Typography>
                 <Box sx={{ display: "flex", justifyContent: "center", gap: 4, mt: 4 }}>
                   {[
-                    { value: "500+", label: "Flights Daily" },
-                    { value: "24/7", label: "Support" },
-                    { value: "99.9%", label: "Uptime" },
+                    { value: "500+", labelKey: "stats.flightsDaily" },
+                    { value: "24/7", labelKey: "stats.support" },
+                    { value: "99.9%", labelKey: "stats.uptime" },
                   ].map((stat, index) => (
                     <Box key={index} sx={{ textAlign: "center" }}>
                       <Typography variant="h5" sx={{ color: "#FFD700", fontWeight: 800, mb: 0.5 }}>
                         {stat.value}
                       </Typography>
                       <Typography variant="body2" sx={{ color: alpha("#fff", 0.7) }}>
-                        {stat.label}
+                        {t(stat.labelKey)}
                       </Typography>
                     </Box>
                   ))}
@@ -295,16 +297,16 @@ export default function Login() {
               </Box>
 
               <Typography variant={isMobile ? "h6" : "h5"} sx={{ fontWeight: 700, color: "#1e293b", mb: 1, textAlign: "center" }}>
-                Sign In
+                {t("auth.signin.title")}
               </Typography>
               <Typography variant="body2" sx={{ color: "#64748b", mb: { xs: 3, sm: 4 }, textAlign: "center" }}>
-                Enter your credentials to access your account
+                {t("auth.signin.subtitle")}
               </Typography>
 
               <form onSubmit={handleLogin}>
                 <TextField
                   fullWidth
-                  label="Email Address"
+                  label={t("auth.email")}
                   type="email"
                   variant="outlined"
                   value={email}
@@ -333,7 +335,7 @@ export default function Login() {
 
                 <TextField
                   fullWidth
-                  label="Password"
+                  label={t("auth.password")}
                   type={showPassword ? "text" : "password"}
                   variant="outlined"
                   value={password}
@@ -369,7 +371,7 @@ export default function Login() {
 
                 <Box sx={{ textAlign: "right", mb: { xs: 1.5, sm: 2 } }}>
                   <MuiLink href="#" sx={{ color: "#64748b", fontSize: "0.875rem", textDecoration: "none", "&:hover": { color: "#1976d2" } }}>
-                    Forgot password?
+                    {t("auth.forgot")}
                   </MuiLink>
                 </Box>
 
@@ -394,14 +396,14 @@ export default function Login() {
                     },
                   }}
                 >
-                  {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Sign In"}
+                  {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : t("auth.signin.cta")}
                 </Button>
 
                 <Box sx={{ mt: { xs: 2, sm: 3 }, textAlign: "center" }}>
                   <Typography variant="body2" sx={{ color: "#64748b" }}>
-                    Don't have an account?{" "}
+                    {t("auth.noAccount")}{" "}
                     <MuiLink component={Link} to="/register" sx={{ color: "#1976d2", fontWeight: 600, textDecoration: "none" }}>
-                      Create account
+                      {t("auth.createLink")}
                     </MuiLink>
                   </Typography>
                 </Box>

@@ -21,6 +21,7 @@ import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import DownloadDoneIcon from "@mui/icons-material/DownloadDone";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
+import { useLocale } from "../i18n";
 
 /** True once the app is already running as an installed app. */
 const isRunningInstalled = () =>
@@ -217,6 +218,7 @@ const describeInstall = (env) => {
  * a dead end. It disappears once the app is already running installed.
  */
 const InstallAppButton = ({ fullWidth = false, sx = {} }) => {
+  const { t } = useLocale();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [installed, setInstalled] = useState(isRunningInstalled);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -289,7 +291,7 @@ const InstallAppButton = ({ fullWidth = false, sx = {} }) => {
           ...sx,
         }}
       >
-        Install app
+        {t("nav.install")}
       </Button>
 
       <Dialog

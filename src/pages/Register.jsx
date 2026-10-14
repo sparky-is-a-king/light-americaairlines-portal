@@ -26,6 +26,7 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
 import { supabase } from "../supabaseClient";
+import { useLocale } from "../i18n";
 
 const float = keyframes`
   0%, 100% { transform: translateY(0px); }
@@ -33,6 +34,7 @@ const float = keyframes`
 `;
 
 export default function Register() {
+  const { t } = useLocale();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -104,15 +106,15 @@ export default function Register() {
     setSuccess(false);
 
     if (!name || !email || !password || !confirmPassword) {
-      setError("All fields are required.");
+      setError(t("auth.error.required"));
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t("auth.error.mismatch"));
       return;
     }
     if (password.length < 8) {
-      setError("Password must be at least 8 characters long.");
+      setError(t("auth.error.short"));
       return;
     }
 
@@ -236,23 +238,23 @@ export default function Register() {
                   </Typography>
                 </Box>
                 <Typography variant="h4" sx={{ color: "white", fontWeight: 600, mb: 3, fontSize: "2rem" }}>
-                  Join Our Community!
+                  {t("auth.join")}
                 </Typography>
                 <Typography variant="body1" sx={{ color: alpha("#fff", 0.8), mb: 4, fontSize: "1.1rem" }}>
-                  Create your account to access exclusive flight deals, track your journeys, and experience premium American Airlines services.
+                  {t("auth.joinBlurb")}
                 </Typography>
                 <Box sx={{ display: "flex", justifyContent: "center", gap: 4, mt: 4 }}>
                   {[
-                    { value: "500+", label: "Flights Daily" },
-                    { value: "24/7", label: "Support" },
-                    { value: "99.9%", label: "Uptime" },
+                    { value: "500+", labelKey: "stats.flightsDaily" },
+                    { value: "24/7", labelKey: "stats.support" },
+                    { value: "99.9%", labelKey: "stats.uptime" },
                   ].map((stat, index) => (
                     <Box key={index} sx={{ textAlign: "center" }}>
                       <Typography variant="h5" sx={{ color: "#FFD700", fontWeight: 800, mb: 0.5 }}>
                         {stat.value}
                       </Typography>
                       <Typography variant="body2" sx={{ color: alpha("#fff", 0.7) }}>
-                        {stat.label}
+                        {t(stat.labelKey)}
                       </Typography>
                     </Box>
                   ))}
@@ -329,16 +331,16 @@ export default function Register() {
               </Box>
 
               <Typography variant={isMobile ? "h6" : "h5"} sx={{ fontWeight: 700, color: "#1e293b", mb: 1, textAlign: "center" }}>
-                Create Account
+                {t("auth.signup.title")}
               </Typography>
               <Typography variant="body2" sx={{ color: "#64748b", mb: { xs: 3, sm: 4 }, textAlign: "center" }}>
-                Fill in your details to get started
+                {t("auth.signup.subtitle")}
               </Typography>
 
               <form onSubmit={handleRegister}>
                 <TextField
                   fullWidth
-                  label="Full Name"
+                  label={t("auth.fullName")}
                   variant="outlined"
                   value={name}
                   onChange={handleInputChange(setName)}
@@ -375,7 +377,7 @@ export default function Register() {
 
                 <TextField
                   fullWidth
-                  label="Email Address"
+                  label={t("auth.email")}
                   type="email"
                   variant="outlined"
                   value={email}
@@ -413,7 +415,7 @@ export default function Register() {
 
                 <TextField
                   fullWidth
-                  label="Password"
+                  label={t("auth.password")}
                   type={showPassword ? "text" : "password"}
                   variant="outlined"
                   value={password}
@@ -458,7 +460,7 @@ export default function Register() {
 
                 <TextField
                   fullWidth
-                  label="Confirm Password"
+                  label={t("auth.confirmPassword")}
                   type={showConfirmPassword ? "text" : "password"}
                   variant="outlined"
                   value={confirmPassword}
@@ -502,7 +504,7 @@ export default function Register() {
                 />
 
                 {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-                {success && <Alert severity="success" sx={{ mb: 2 }}>Account created successfully! Redirecting to login...</Alert>}
+                {success && <Alert severity="success" sx={{ mb: 2 }}>{t("auth.success")}</Alert>}
 
                 <Button
                   type="submit"
@@ -524,14 +526,14 @@ export default function Register() {
                     },
                   }}
                 >
-                  {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Create Account"}
+                  {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : t("auth.signup.cta")}
                 </Button>
 
                 <Box sx={{ mt: { xs: 2, sm: 3 }, textAlign: "center" }}>
                   <Typography variant="body2" sx={{ color: "#64748b" }}>
-                    Already have an account?{" "}
+                    {t("auth.hasAccount")}{" "}
                     <MuiLink component={Link} to="/login" sx={{ color: "#1976d2", fontWeight: 600, textDecoration: "none" }}>
-                      Sign In
+                      {t("auth.signinLink")}
                     </MuiLink>
                   </Typography>
                 </Box>

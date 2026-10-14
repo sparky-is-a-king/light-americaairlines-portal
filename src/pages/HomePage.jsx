@@ -18,7 +18,8 @@ import {
   useMediaQuery
 } from "@mui/material";
 import { Link } from "react-router-dom";
-import { FlightCard, flights } from "../components/FlightCard";
+import { FlightCard } from "../components/FlightCard";
+import { flights } from "../data/flights";
 import BlurText from "../components/reactbits/BlurText";
 import CountUp from "../components/reactbits/CountUp";
 import Reveal from "../components/reactbits/Reveal";
@@ -43,6 +44,7 @@ import {
 } from "@mui/icons-material";
 import womanImage from "../assets/images/lady.webp";
 import { keyframes } from "@mui/system";
+import { useLocale } from "../i18n";
 
 // Animation keyframes
 const floatAnimation = keyframes`
@@ -106,14 +108,17 @@ const popularDestinations = [
   { city: "Sydney", code: "SYD", image: wikiImage("Sydney_Opera_House_and_Harbour_Bridge_Dusk_%282%29_2019-06-21.jpg", 480), deals: 16 },
 ];
 
+// Copy lives in the dictionaries, keyed per card, so the section follows the
+// chosen locale.
 const features = [
-  { icon: "⚡", title: "Instant Booking", desc: "Get confirmed tickets in minutes" },
-  { icon: "🛡️", title: "Flexible Cancellation", desc: "Free cancellation up to 24 hours" },
-  { icon: "💰", title: "Best Price Guarantee", desc: "We'll match any lower price" },
-  { icon: "📱", title: "Mobile App", desc: "Book & track flights on the go" },
+  { icon: "⚡", titleKey: "home.feature.instant.title", descKey: "home.feature.instant.desc" },
+  { icon: "🛡️", titleKey: "home.feature.flexible.title", descKey: "home.feature.flexible.desc" },
+  { icon: "💰", titleKey: "home.feature.price.title", descKey: "home.feature.price.desc" },
+  { icon: "📱", titleKey: "home.feature.app.title", descKey: "home.feature.app.desc" },
 ];
 
 const HomePage = () => {
+  const { t } = useLocale();
   const [currentImage, setCurrentImage] = useState(0);
   const [searchValues, setSearchValues] = useState({
     from: "",
@@ -411,7 +416,7 @@ const HomePage = () => {
                     textShadow: "0 2px 4px rgba(0,0,0,0.3)"
                   }}>
                     <ShinyText
-                      text="⭐ 4.9/5 RATED BY 50K+ TRAVELERS"
+                      text={t("home.badge")}
                       color="#FFFFFF"
                       shineColor="#FFD700"
                       speed={3.5}
@@ -426,7 +431,7 @@ const HomePage = () => {
               <Box sx={{ mb: { xs: 2, sm: 3 }, textAlign: { xs: "center", md: "right" } }}>
                 {/* React Bits SplitText — GSAP per-character reveal */}
                 <SplitText
-                  text="Elevate Your"
+                  text={t("home.hero.title1")}
                   className="hero-title"
                   tag="div"
                   textAlign="inherit"
@@ -437,7 +442,7 @@ const HomePage = () => {
                   to={{ opacity: 1, y: 0, scale: 1 }}
                 />
                 <SplitText
-                  text="Journey Experience"
+                  text={t("home.hero.title2")}
                   className="hero-title hero-title-gold"
                   tag="div"
                   textAlign="inherit"
@@ -461,7 +466,7 @@ const HomePage = () => {
                   textShadow: "0 2px 8px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.6)",
                 }}
               >
-                Fly with confidence. Track in real-time. Experience premium service across 500+ destinations worldwide.
+                {t("home.hero.subtitle")}
               </Typography>
 
               {/* Stats */}
@@ -473,10 +478,10 @@ const HomePage = () => {
                 justifyContent: { xs: "center", md: "flex-end" },
               }}>
                 {[
-                  { value: 500, suffix: "+", label: "Destinations" },
-                  { text: "24/7", label: "Support" },
-                  { value: 99.8, suffix: "%", label: "On-time Rate" },
-                  { value: 1, suffix: "M+", label: "Happy Travelers" },
+                  { value: 500, suffix: "+", labelKey: "home.stat.destinations" },
+                  { text: "24/7", labelKey: "home.stat.support" },
+                  { value: 99.8, suffix: "%", labelKey: "home.stat.ontime" },
+                  { value: 1, suffix: "M+", labelKey: "home.stat.travelers" },
                 ].map((stat, index) => (
                   <Zoom in={true} timeout={1000} key={index} style={{ transitionDelay: `${index * 200}ms` }}>
                     <Box sx={{ 
@@ -509,7 +514,7 @@ const HomePage = () => {
                         fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" },
                         textShadow: "0 1px 2px rgba(0,0,0,0.5)"
                       }}>
-                        {stat.label}
+                        {t(stat.labelKey)}
                       </Typography>
                     </Box>
                   </Zoom>
@@ -537,7 +542,7 @@ const HomePage = () => {
                   className="hero-cta"
                 >
                   <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}>
-                    Book Flight <ArrowForward sx={{ fontSize: 18 }} />
+                    {t("home.cta.book")} <ArrowForward sx={{ fontSize: 18 }} />
                   </Box>
                 </StarBorder>
 
@@ -566,7 +571,7 @@ const HomePage = () => {
                     minWidth: { xs: "140px", sm: "150px", md: "160px" },
                   }}
                 >
-                  Track Flight
+                  {t("home.cta.track")}
                 </Button>
               </Box>
 
@@ -595,7 +600,7 @@ const HomePage = () => {
                     fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" },
                     textShadow: "0 1px 2px rgba(0,0,0,0.5)"
                   }}>
-                    Best Price Guarantee
+                    {t("home.trust.price")}
                   </Typography>
                   <TrendingUp sx={{ 
                     color: "#FFD700", 
@@ -615,7 +620,7 @@ const HomePage = () => {
                     fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" },
                     textShadow: "0 1px 2px rgba(0,0,0,0.5)"
                   }}>
-                    Secure Booking
+                    {t("home.trust.secure")}
                   </Typography>
                   <Shield sx={{ 
                     color: "#4CAF50", 
@@ -656,7 +661,7 @@ const HomePage = () => {
                   border: "1px solid rgba(255,255,255,0.2)"
                 }}
               >
-                Scroll to explore
+                {t("home.scroll")}
               </Typography>
               <Box
                 sx={{
@@ -707,7 +712,7 @@ const HomePage = () => {
                 fontSize: { xs: "1.6rem", sm: "1.8rem", md: "2rem", lg: "2.2rem" }
               }}
             >
-              Book Your Flight
+              {t("home.booking.title")}
             </Typography>
           </GradientText>
         </Box>
@@ -732,8 +737,8 @@ const HomePage = () => {
           }}
         >
           <TextField
-            label="From"
-            placeholder="e.g. JKIA"
+            label={t("home.form.from")}
+            placeholder={t("home.form.fromPh")}
             variant="outlined"
             size={isMobile ? "small" : "medium"}
             value={searchValues.from}
@@ -750,8 +755,8 @@ const HomePage = () => {
             }}
           />
           <TextField
-            label="To"
-            placeholder="e.g. CGK"
+            label={t("home.form.to")}
+            placeholder={t("home.form.toPh")}
             variant="outlined"
             size={isMobile ? "small" : "medium"}
             value={searchValues.to}
@@ -768,7 +773,7 @@ const HomePage = () => {
             }}
           />
           <TextField
-            label="Departure Date"
+            label={t("home.form.date")}
             type="date"
             variant="outlined"
             size={isMobile ? "small" : "medium"}
@@ -807,7 +812,7 @@ const HomePage = () => {
               transition: "all 0.3s ease",
             }}
           >
-            Search Flights
+            {t("home.form.search")}
           </Button>
         </Box>
 
@@ -826,7 +831,7 @@ const HomePage = () => {
           }}>
             <Box>
               <Chip 
-                label="🌍 Global Destinations" 
+                label={t("home.dest.chip")} 
                 sx={{ 
                   mb: { xs: 1, sm: 2 }, 
                   bgcolor: "rgba(13, 71, 161, 0.1)", 
@@ -842,7 +847,7 @@ const HomePage = () => {
                 fontSize: { xs: "1.5rem", sm: "1.8rem", md: "2rem", lg: "2.2rem" } 
               }}>
                 <DecryptedText
-                  text="Popular Destinations Worldwide"
+                  text={t("home.dest.title")}
                   animateOn="view"
                   speed={45}
                   maxIterations={8}
@@ -855,7 +860,7 @@ const HomePage = () => {
                 fontSize: { xs: "0.875rem", sm: "1rem" }
               }}>
                 <ShinyText
-                  text="Discover amazing flight deals across the globe"
+                  text={t("home.dest.subtitle")}
                   color="#64748B"
                   shineColor="#0D47A1"
                   speed={3.5}
@@ -876,7 +881,7 @@ const HomePage = () => {
                 }
               }}
             >
-              View All →
+              {t("home.dest.viewAll")}
             </Button>
           </Box>
 
@@ -939,7 +944,7 @@ const HomePage = () => {
                       fontWeight: 700,
                       fontSize: { xs: "0.75rem", sm: "0.875rem" }
                     }}>
-                      {dest.deals} deals
+                      {t("home.dest.deals", { count: dest.deals })}
                     </Box>
                   </Box>
                   <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
@@ -955,7 +960,7 @@ const HomePage = () => {
                           color: "#64748b",
                           fontSize: { xs: "0.75rem", sm: "0.875rem" }
                         }}>
-                          {dest.code} Airport
+                          {dest.code} {t("home.dest.airport")}
                         </Typography>
                       </Box>
                       <IconButton sx={{ 
@@ -988,7 +993,7 @@ const HomePage = () => {
               fontSize: { xs: "1.6rem", sm: "1.8rem", md: "2rem", lg: "2.2rem" }
             }}
           >
-            Available Flights
+            {t("home.flights.title")}
           </Typography>
 
           {(appliedSearch?.from || appliedSearch?.to) && (
@@ -1003,12 +1008,12 @@ const HomePage = () => {
               }}
             >
               <Typography variant="body2" sx={{ color: "#64748b", fontWeight: 600 }}>
-                Showing {visibleFlights.length} of {flights.length} flights
+                {t("home.flights.showing", { shown: visibleFlights.length, total: flights.length })}
               </Typography>
               {appliedSearch.from && (
                 <Chip
                   size="small"
-                  label={`From: ${appliedSearch.from}`}
+                  label={t("home.flights.fromChip", { value: appliedSearch.from })}
                   onDelete={handleClearSearch}
                   sx={{ bgcolor: "rgba(13, 71, 161, 0.08)", color: "#0d47a1", fontWeight: 600 }}
                 />
@@ -1016,13 +1021,13 @@ const HomePage = () => {
               {appliedSearch.to && (
                 <Chip
                   size="small"
-                  label={`To: ${appliedSearch.to}`}
+                  label={t("home.flights.toChip", { value: appliedSearch.to })}
                   onDelete={handleClearSearch}
                   sx={{ bgcolor: "rgba(13, 71, 161, 0.08)", color: "#0d47a1", fontWeight: 600 }}
                 />
               )}
               <Button size="small" onClick={handleClearSearch} sx={{ textTransform: "none", fontWeight: 600 }}>
-                Clear search
+                {t("home.flights.clear")}
               </Button>
             </Box>
           )}
@@ -1055,10 +1060,10 @@ const HomePage = () => {
                 }}
               >
                 <Typography variant="h6" sx={{ color: "#1e293b", fontWeight: 700, mb: 1 }}>
-                  No flights match your search
+                  {t("home.flights.noMatch")}
                 </Typography>
                 <Typography variant="body2" sx={{ color: "#64748b", mb: 3 }}>
-                  Try another airport code, or clear the filters to see every available route.
+                  {t("home.flights.noMatchHint")}
                 </Typography>
                 <Button
                   variant="contained"
@@ -1072,7 +1077,7 @@ const HomePage = () => {
                     "&:hover": { bgcolor: "#08306b" },
                   }}
                 >
-                  Clear search
+                  {t("home.flights.clear")}
                 </Button>
               </Box>
             )}
@@ -1099,7 +1104,7 @@ const HomePage = () => {
               fontSize: { xs: "1.6rem", sm: "1.8rem", md: "2rem", lg: "2.2rem" }
             }}
           >
-            Why Choose American Airlines?
+            {t("home.features.title")}
           </Typography>
           <Grid 
             container 
@@ -1131,13 +1136,13 @@ const HomePage = () => {
                     color: "#1e293b",
                     fontSize: { xs: "1rem", sm: "1.125rem", md: "1.25rem" }
                   }}>
-                    {feature.title}
+                    {t(feature.titleKey)}
                   </Typography>
                   <Typography variant="body2" sx={{ 
                     color: "#64748b",
                     fontSize: { xs: "0.875rem", sm: "0.9rem", md: "1rem" }
                   }}>
-                    {feature.desc}
+                    {t(feature.descKey)}
                   </Typography>
                 </SpotlightCard>
                 </AnimatedContent>
