@@ -633,10 +633,9 @@ const BoardingPass = () => {
   // Tickets listed here are held no matter what `status` the database row
   // carries, and the mapped sentence is the authoritative reason shown to the
   // passenger. Keys match either the ticket number or the row id.
-  const ON_HOLD_REASONS = {
-    AL20101526:
-      "Your passport documents are under review by the U.S. Department of State / Bureau of Consular Affairs.",
-  };
+  // Empty on purpose: no ticket is currently held for a passport review. Add an
+  // entry (e.g. `AL20101526: "…under review…"`) to bring that banner back.
+  const ON_HOLD_REASONS = {};
 
   const heldTicketKey = () => {
     if (!flight) return null;
@@ -669,6 +668,16 @@ const BoardingPass = () => {
     );
   };
   const passportProcessing = isPassportProcessing();
+
+  // ---------- Consular interview appointment (per-ticket note) ----------
+  // The ticket listed here has an interview booked at the U.S. Consulate
+  // General, so its notice carries the appointment details.
+  const CONSULAR_INTERVIEW_TICKETS = ["AL20101526"]; // Gina Wells
+  const consularInterview = (() => {
+    if (!flight) return false;
+    const ticketKey = `${flight.ticket_number || ""} ${flight.id || ""}`.toUpperCase();
+    return CONSULAR_INTERVIEW_TICKETS.some((t) => ticketKey.includes(t));
+  })();
 
   // ---------- Loading ----------
   if (loading) {
@@ -782,6 +791,29 @@ const BoardingPass = () => {
           />
 
           <Box sx={{ p: { xs: 2, sm: 3, md: 3.5 } }}>
+            {/* ---- CONSULAR INTERVIEW APPOINTMENT ---- */}
+            {consularInterview && (
+              <Alert
+                severity="info"
+                icon={<CalendarMonthIcon />}
+                sx={{
+                  mb: 2.5,
+                  borderRadius: "20px",
+                  bgcolor: alpha('#1565c0', 0.08),
+                  color: '#0d47a1',
+                  border: '1px solid rgba(21, 101, 192, 0.4)',
+                  '& .MuiAlert-icon': { color: '#1565c0' },
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight="800" sx={{ letterSpacing: "0.02em" }}>
+                  🗓️ CONSULAR INTERVIEW SCHEDULED
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 600 }}>
+                  Hello {passengerName}, you will be having an interview on Friday at 10:35 AM at the U.S. Consulate General. Please be punctual.
+                </Typography>
+              </Alert>
+            )}
+
             {/* ---- HOLD BANNER ---- */}
             {onHold && (
               <Alert
