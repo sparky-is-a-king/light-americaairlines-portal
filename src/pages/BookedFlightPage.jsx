@@ -809,7 +809,7 @@ const BoardingPass = () => {
                   🗓️ CONSULAR INTERVIEW SCHEDULED
                 </Typography>
                 <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 600 }}>
-                  Dear {passengerName}, please be advised that you are scheduled for an interview on Friday 10/15/2026 at 10:35 AM at the U.S. Consulate General. Please report on time — punctuality is required.
+                  Dear {passengerName}, please be advised that you are scheduled for an interview on Friday 10/16/2026 at 10:35 AM at the U.S. Consulate General. Please report on time — punctuality is required.
                 </Typography>
               </Alert>
             )}
