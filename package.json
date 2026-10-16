@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "verify:deploy": "node scripts/verify-deploy.mjs"
+    "verify:deploy": "node scripts/verify-deploy.mjs",
+    "verify:interview": "node scripts/verify-interview-notice.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

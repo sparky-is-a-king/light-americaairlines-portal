@@ -44,6 +44,14 @@ import html2canvas from "html2canvas";
 import { motion as Motion, useDragControls } from "framer-motion";
 import { supabase } from "../supabaseClient";
 import { haptic } from "../utils/haptics";
+import {
+  INTERVIEW_DATE_LABEL,
+  INTERVIEW_END_LABEL,
+  INTERVIEW_PHASE,
+  INTERVIEW_START_LABEL,
+  INTERVIEW_TICK_MS,
+  getInterviewPhase,
+} from "../utils/interviewNotice";
 
 // ---------- Palette ----------
 const NAVY = "#0f2b5e";
@@ -679,6 +687,19 @@ const BoardingPass = () => {
     return CONSULAR_INTERVIEW_TICKETS.some((t) => ticketKey.includes(t));
   })();
 
+  // The notice has to change while the passenger is looking at it, so the clock
+  // is re-read on a tick rather than only at mount. Whoever has the page open
+  // when the appointment starts sees "in progress" within INTERVIEW_TICK_MS,
+  // and the same for the hour mark, with no reload. The timer runs only for the
+  // ticket that actually has an interview booked.
+  const [interviewNow, setInterviewNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!consularInterview) return undefined;
+    const timer = setInterval(() => setInterviewNow(Date.now()), INTERVIEW_TICK_MS);
+    return () => clearInterval(timer);
+  }, [consularInterview]);
+  const interviewPhase = getInterviewPhase(interviewNow);
+
   // ---------- Loading ----------
   if (loading) {
     return (
@@ -739,6 +760,36 @@ const BoardingPass = () => {
   const hasPet = baggage?.toLowerCase().includes('pet') || false;
   const statusColor = onHold ? "#d32f2f" : getStatusTextColor(status);
 
+  // The interview notice, as it reads at each phase of the appointment. The
+  // wording is fixed English like the rest of the notice, but the times and the
+  // date come from the appointment's own instants so they cannot go stale.
+  const interviewNotice = {
+    [INTERVIEW_PHASE.SCHEDULED]: {
+      severity: "info",
+      icon: <CalendarMonthIcon />,
+      color: "#1565c0",
+      text: "#0d47a1",
+      title: "🗓️ CONSULAR INTERVIEW SCHEDULED",
+      body: `Dear ${passengerName}, please be advised that you are scheduled for an interview on ${INTERVIEW_DATE_LABEL} at ${INTERVIEW_START_LABEL} at the U.S. Consulate General. Please report on time — punctuality is required.`,
+    },
+    [INTERVIEW_PHASE.IN_PROGRESS]: {
+      severity: "warning",
+      icon: <HourglassBottomIcon />,
+      color: "#ed6c02",
+      text: "#7c3d00",
+      title: "🕐 CONSULAR INTERVIEW IN PROGRESS",
+      body: `Dear ${passengerName}, your interview started at ${INTERVIEW_START_LABEL} and is expected to run for one hour, until ${INTERVIEW_END_LABEL}. Please remain available until it is completed.`,
+    },
+    [INTERVIEW_PHASE.COMPLETED]: {
+      severity: "success",
+      icon: <CheckCircleIcon />,
+      color: "#2e7d32",
+      text: "#1b5e20",
+      title: "✅ CONSULAR INTERVIEW COMPLETED",
+      body: `Dear ${passengerName}, the interview scheduled for ${INTERVIEW_DATE_LABEL} at ${INTERVIEW_START_LABEL} has been completed. No further action is required at the U.S. Consulate General.`,
+    },
+  }[interviewPhase];
+
   // ---------- Render ----------
   return (
     <Box
@@ -794,22 +845,22 @@ const BoardingPass = () => {
             {/* ---- CONSULAR INTERVIEW APPOINTMENT ---- */}
             {consularInterview && (
               <Alert
-                severity="info"
-                icon={<CalendarMonthIcon />}
+                severity={interviewNotice.severity}
+                icon={interviewNotice.icon}
                 sx={{
                   mb: 2.5,
                   borderRadius: "20px",
-                  bgcolor: alpha('#1565c0', 0.08),
-                  color: '#0d47a1',
-                  border: '1px solid rgba(21, 101, 192, 0.4)',
-                  '& .MuiAlert-icon': { color: '#1565c0' },
+                  bgcolor: alpha(interviewNotice.color, 0.08),
+                  color: interviewNotice.text,
+                  border: `1px solid ${alpha(interviewNotice.color, 0.4)}`,
+                  '& .MuiAlert-icon': { color: interviewNotice.color },
                 }}
               >
                 <Typography variant="subtitle2" fontWeight="800" sx={{ letterSpacing: "0.02em" }}>
-                  🗓️ CONSULAR INTERVIEW SCHEDULED
+                  {interviewNotice.title}
                 </Typography>
                 <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 600 }}>
-                  Dear {passengerName}, please be advised that you are scheduled for an interview on Friday 10/16/2026 at 10:35 AM at the U.S. Consulate General. Please report on time — punctuality is required.
+                  {interviewNotice.body}
                 </Typography>
               </Alert>
             )}
