@@ -7,7 +7,7 @@
  *
  * Three things are checked:
  *
- *   1. The appointment instants. 10:45 AM on 2026-10-20 (the rescheduled Tuesday)
+ *   1. The appointment instants. 10:45 AM on 2026-10-20 (the second interview)
  *      in America/Boise has to resolve to the same UTC instant no matter which
  *      zone this script runs in, which is what makes "10:45 AM Boise time" true
  *      for a passenger reading the page from Tokyo.
@@ -17,8 +17,8 @@
  *      11:45:00.000 is completed.
  *
  *   3. The wiring, so the page cannot fall back to a fixed sentence: the notice
- *      component must ask for the phase, must carry all three states and the
- *      missed date, and must show the $500 stamping / signature fee.
+ *      component must ask for the phase, must carry all three states, and must
+ *      show the $500 stamping / signature fee with its payment deadline.
  *
  * Usage:
  *   npm run verify:interview
@@ -40,7 +40,6 @@ import {
   INTERVIEW_FEE_AMOUNT,
   INTERVIEW_FEE_DISPLAY,
   INTERVIEW_FEE_LABEL,
-  INTERVIEW_MISSED_DATE_LABEL,
   INTERVIEW_PHASE,
   INTERVIEW_START,
   INTERVIEW_START_LABEL,
@@ -112,8 +111,7 @@ check("ends 11:45 AM Boise time", INTERVIEW_END.toISOString(), "2026-10-20T17:45
 check("is a Tuesday", INTERVIEW_DATE_LABEL.split(" ")[0], "Tuesday");
 
 console.log("\n  Labels the notice prints");
-check("rescheduled date", INTERVIEW_DATE_LABEL, "Tuesday 10/20/2026");
-check("missed date", INTERVIEW_MISSED_DATE_LABEL, "Friday 10/16/2026");
+check("second-interview date", INTERVIEW_DATE_LABEL, "Tuesday 10/20/2026");
 check("start time", INTERVIEW_START_LABEL, "10:45 AM");
 check("end time", INTERVIEW_END_LABEL, "11:45 AM");
 
@@ -144,18 +142,30 @@ const page = readFileSync(PAGE, "utf8");
 check("asks the util for the phase", /getInterviewPhase\(interviewNow\)/.test(page), true);
 check("re-reads the clock on a tick", /setInterval\(\(\) => setInterviewNow\(Date\.now\(\)\)/.test(page), true);
 check("clears that timer", /clearInterval\(timer\)/.test(page), true);
-check("renders the scheduled state", page.includes("CONSULAR INTERVIEW RESCHEDULED"), true);
+check("renders the scheduled state", page.includes("SECOND CONSULAR INTERVIEW SCHEDULED"), true);
 check("renders the in-progress state", page.includes("CONSULAR INTERVIEW IN PROGRESS"), true);
 check("renders the completed state", page.includes("CONSULAR INTERVIEW COMPLETED"), true);
-check("says what the appointment moved from", page.includes("{INTERVIEW_MISSED_DATE_LABEL}"), true);
 check("shows the fee description", page.includes("{INTERVIEW_FEE_LABEL}"), true);
 check("shows the amount due", page.includes("{INTERVIEW_FEE_DISPLAY}"), true);
+check(
+  "sets the payment deadline to the interview day",
+  page.includes("before or on the day of the interview"),
+  true
+);
+// Scoped to the notice block: the file's status-colour helper elsewhere mentions
+// "reschedule", which has nothing to do with this card's wording.
+const noticeBlock = page.slice(
+  page.indexOf("CONSULAR INTERVIEW + FEE"),
+  page.indexOf("HOLD BANNER")
+);
+check("does not say the interview was missed", /missed/i.test(noticeBlock), false);
+check("does not call it a reschedule", /reschedul/i.test(noticeBlock), false);
 // One card, not a banner plus a second banner: the amount appears exactly once
 // and there is no standalone fee alert left over.
 check("amount rendered once", page.split("{INTERVIEW_FEE_DISPLAY}").length - 1, 1);
 check("no second stacked fee banner", page.includes("PAYMENT REQUIRED"), false);
 check("no leftover hardcoded 10:35 AM", page.includes("10:35 AM"), false);
-check("no leftover schedule dated 10/16/2026", /scheduled for Friday 10\/16\/2026/.test(page), false);
+check("no leftover 10/16/2026 date", page.includes("10/16/2026"), false);
 
 if (process.env.INTERVIEW_VERIFY_CHILD === "1") {
   console.log("\n  Zone independence  (checked by the parent run)");
@@ -168,7 +178,7 @@ console.log(`\n${"─".repeat(64)}`);
 if (failures) {
   console.log(`\n✖ ${failures} check${failures === 1 ? "" : "s"} failed — the notice does not follow the appointment.\n`);
 } else {
-  console.log("\n✅ The notice tracks the rescheduled appointment: Tuesday 10/20/2026 at");
+  console.log("\n✅ The notice tracks the second interview: Tuesday 10/20/2026 at");
   console.log("   10:45 AM Boise time, in progress until 11:45 AM, completed after that —");
   console.log("   in every zone, with the $500 stamping / signature fee shown.\n");
 }

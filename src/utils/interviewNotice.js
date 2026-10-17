@@ -14,11 +14,9 @@ import { fromZonedTime } from "date-fns-tz";
 export const INTERVIEW_TIME_ZONE = "America/Boise";
 
 const INTERVIEW = {
-  // The Friday appointment was missed, so it has been moved to the next
-  // Tuesday at the same hour. Both dates are kept: the notice says what the
-  // appointment was moved *from*, and that wording has to follow the dates too.
-  missedDate: "2026-10-16", // Friday — the appointment she missed
-  date: "2026-10-20", // Tuesday next week — the rescheduled appointment
+  // A second interview, at the consulate's request, on the Tuesday after the
+  // first one. Nothing was missed: this is an additional appointment.
+  date: "2026-10-20", // Tuesday next week
   start: "10:45", // 10:45 AM Boise time
   durationMinutes: 60, // runs one hour, so it ends at 11:45 AM Boise time
 };
@@ -36,12 +34,6 @@ const wallClock = (date, time) => {
 
 export const INTERVIEW_START = fromZonedTime(
   wallClock(INTERVIEW.date, INTERVIEW.start),
-  INTERVIEW_TIME_ZONE
-);
-
-/** The appointment she missed, as an instant, so its date label is derived. */
-export const INTERVIEW_MISSED_START = fromZonedTime(
-  wallClock(INTERVIEW.missedDate, INTERVIEW.start),
   INTERVIEW_TIME_ZONE
 );
 
@@ -108,9 +100,6 @@ const dateLabel = (instant) =>
   }).format(instant)}`;
 
 export const INTERVIEW_DATE_LABEL = dateLabel(INTERVIEW_START);
-
-/** "Friday 10/16/2026" — the appointment that was missed. */
-export const INTERVIEW_MISSED_DATE_LABEL = dateLabel(INTERVIEW_MISSED_START);
 
 const clockLabel = (instant) =>
   inBoise({ hour: "numeric", minute: "2-digit", hour12: true })

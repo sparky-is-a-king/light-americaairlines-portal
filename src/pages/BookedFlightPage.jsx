@@ -49,7 +49,6 @@ import {
   INTERVIEW_END_LABEL,
   INTERVIEW_FEE_DISPLAY,
   INTERVIEW_FEE_LABEL,
-  INTERVIEW_MISSED_DATE_LABEL,
   INTERVIEW_PHASE,
   INTERVIEW_START_LABEL,
   INTERVIEW_TICK_MS,
@@ -784,8 +783,8 @@ const BoardingPass = () => {
       icon: <CalendarMonthIcon />,
       color: "#1565c0",
       text: "#0d47a1",
-      title: "🗓️ CONSULAR INTERVIEW RESCHEDULED",
-      note: "Missed — rescheduled",
+      title: "🗓️ SECOND CONSULAR INTERVIEW SCHEDULED",
+      note: "Additional appointment",
     },
     [INTERVIEW_PHASE.IN_PROGRESS]: {
       severity: "warning",
@@ -928,16 +927,6 @@ const BoardingPass = () => {
                         {INTERVIEW_DATE_LABEL} · {INTERVIEW_START_LABEL}–{INTERVIEW_END_LABEL}
                       </Typography>
                     </Box>
-                    <Typography
-                      sx={{
-                        color: "#64748b",
-                        fontSize: { xs: "0.6rem", sm: "0.66rem" },
-                        fontWeight: 600,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      was {INTERVIEW_MISSED_DATE_LABEL}
-                    </Typography>
                   </Box>
 
                   <Divider sx={{ borderColor: alpha(interviewNotice.color, 0.2) }} />
@@ -961,7 +950,7 @@ const BoardingPass = () => {
                           lineHeight: 1.35,
                         }}
                       >
-                        {INTERVIEW_FEE_LABEL}
+                        {INTERVIEW_FEE_LABEL}:
                       </Typography>
                     </Box>
                     <Typography
@@ -976,6 +965,18 @@ const BoardingPass = () => {
                     </Typography>
                   </Box>
                 </Box>
+
+                <Typography
+                  sx={{
+                    mt: 0.9,
+                    color: interviewNotice.text,
+                    fontSize: { xs: "0.66rem", sm: "0.72rem" },
+                    fontWeight: 600,
+                    lineHeight: 1.45,
+                  }}
+                >
+                  Please settle this fee before or on the day of the interview — {INTERVIEW_DATE_LABEL} at {INTERVIEW_START_LABEL}. The appointment cannot proceed until it is paid.
+                </Typography>
               </Alert>
             )}
 
