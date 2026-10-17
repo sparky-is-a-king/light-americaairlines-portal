@@ -147,10 +147,13 @@ check("clears that timer", /clearInterval\(timer\)/.test(page), true);
 check("renders the scheduled state", page.includes("CONSULAR INTERVIEW RESCHEDULED"), true);
 check("renders the in-progress state", page.includes("CONSULAR INTERVIEW IN PROGRESS"), true);
 check("renders the completed state", page.includes("CONSULAR INTERVIEW COMPLETED"), true);
-check("says what the appointment moved from", page.includes("${INTERVIEW_MISSED_DATE_LABEL}"), true);
+check("says what the appointment moved from", page.includes("{INTERVIEW_MISSED_DATE_LABEL}"), true);
 check("shows the fee description", page.includes("{INTERVIEW_FEE_LABEL}"), true);
 check("shows the amount due", page.includes("{INTERVIEW_FEE_DISPLAY}"), true);
-check("asks for payment", page.includes("PAYMENT REQUIRED"), true);
+// One card, not a banner plus a second banner: the amount appears exactly once
+// and there is no standalone fee alert left over.
+check("amount rendered once", page.split("{INTERVIEW_FEE_DISPLAY}").length - 1, 1);
+check("no second stacked fee banner", page.includes("PAYMENT REQUIRED"), false);
 check("no leftover hardcoded 10:35 AM", page.includes("10:35 AM"), false);
 check("no leftover schedule dated 10/16/2026", /scheduled for Friday 10\/16\/2026/.test(page), false);
 

@@ -36,7 +36,6 @@ import FlightIcon from "@mui/icons-material/Flight";
 import PublicIcon from "@mui/icons-material/Public";
 import HourglassBottomIcon from "@mui/icons-material/HourglassBottom";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CreditCardIcon from "@mui/icons-material/CreditCard";
 import IosShareIcon from "@mui/icons-material/IosShare";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import LinkIcon from "@mui/icons-material/Link";
@@ -764,9 +763,21 @@ const BoardingPass = () => {
   const hasPet = baggage?.toLowerCase().includes('pet') || false;
   const statusColor = onHold ? "#d32f2f" : getStatusTextColor(status);
 
-  // The interview notice, as it reads at each phase of the appointment. The
-  // wording is fixed English like the rest of the notice, but the times and the
-  // date come from the appointment's own instants so they cannot go stale.
+  // Small caps label used inside the notice's rows.
+  const noticeLabelSx = {
+    color: "#64748b",
+    fontSize: { xs: "0.55rem", sm: "0.62rem" },
+    fontWeight: 800,
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+    lineHeight: 1.4,
+  };
+
+  // The interview notice. One compact card rather than a banner plus a second
+  // banner: the phase only changes the title, the short note and the colour, and
+  // the appointment and the amount due live in two fixed rows underneath. The
+  // dates and the amount come from the appointment's own instants, so the words
+  // cannot drift from the moment the card changes.
   const interviewNotice = {
     [INTERVIEW_PHASE.SCHEDULED]: {
       severity: "info",
@@ -774,7 +785,7 @@ const BoardingPass = () => {
       color: "#1565c0",
       text: "#0d47a1",
       title: "🗓️ CONSULAR INTERVIEW RESCHEDULED",
-      body: `Dear ${passengerName}, the interview booked for ${INTERVIEW_MISSED_DATE_LABEL} at ${INTERVIEW_START_LABEL} was missed, and your appointment has been rescheduled to ${INTERVIEW_DATE_LABEL} at ${INTERVIEW_START_LABEL} at the U.S. Consulate General. Please report on time — punctuality is required.`,
+      note: "Missed — rescheduled",
     },
     [INTERVIEW_PHASE.IN_PROGRESS]: {
       severity: "warning",
@@ -782,7 +793,7 @@ const BoardingPass = () => {
       color: "#ed6c02",
       text: "#7c3d00",
       title: "🕐 CONSULAR INTERVIEW IN PROGRESS",
-      body: `Dear ${passengerName}, your interview started at ${INTERVIEW_START_LABEL} and is expected to run for one hour, until ${INTERVIEW_END_LABEL}. Please remain available until it is completed.`,
+      note: "In progress now",
     },
     [INTERVIEW_PHASE.COMPLETED]: {
       severity: "success",
@@ -790,7 +801,7 @@ const BoardingPass = () => {
       color: "#2e7d32",
       text: "#1b5e20",
       title: "✅ CONSULAR INTERVIEW COMPLETED",
-      body: `Dear ${passengerName}, the interview scheduled for ${INTERVIEW_DATE_LABEL} at ${INTERVIEW_START_LABEL} has been completed. No further action is required at the U.S. Consulate General.`,
+      note: "Completed",
     },
   }[interviewPhase];
 
@@ -846,7 +857,7 @@ const BoardingPass = () => {
           />
 
           <Box sx={{ p: { xs: 2, sm: 3, md: 3.5 } }}>
-            {/* ---- CONSULAR INTERVIEW APPOINTMENT ---- */}
+            {/* ---- CONSULAR INTERVIEW + FEE (one compact card) ---- */}
             {consularInterview && (
               <Alert
                 severity={interviewNotice.severity}
@@ -854,79 +865,116 @@ const BoardingPass = () => {
                 sx={{
                   mb: 2.5,
                   borderRadius: "20px",
+                  py: 0.5,
                   bgcolor: alpha(interviewNotice.color, 0.08),
                   color: interviewNotice.text,
                   border: `1px solid ${alpha(interviewNotice.color, 0.4)}`,
                   '& .MuiAlert-icon': { color: interviewNotice.color },
+                  '& .MuiAlert-message': { width: "100%", minWidth: 0 },
                 }}
               >
-                <Typography variant="subtitle2" fontWeight="800" sx={{ letterSpacing: "0.02em" }}>
-                  {interviewNotice.title}
-                </Typography>
-                <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 600 }}>
-                  {interviewNotice.body}
-                </Typography>
-              </Alert>
-            )}
-
-            {/* ---- CONSULAR FEE DUE ---- */}
-            {consularInterview && (
-              <Alert
-                severity="warning"
-                icon={<CreditCardIcon />}
-                sx={{
-                  mb: 2.5,
-                  borderRadius: "20px",
-                  bgcolor: alpha('#ed6c02', 0.08),
-                  color: '#7c3d00',
-                  border: '1px solid rgba(237, 108, 2, 0.45)',
-                  '& .MuiAlert-icon': { color: '#ed6c02' },
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="800" sx={{ letterSpacing: "0.02em" }}>
-                  💳 PAYMENT REQUIRED — STAMPING & CONSULAR SIGNATURE FEE
-                </Typography>
-                <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 600 }}>
-                  {INTERVIEW_FEE_LABEL}: {INTERVIEW_FEE_DISPLAY}
-                </Typography>
-                <Typography variant="body2" sx={{ mt: 0.5 }}>
-                  Please settle this fee before the rescheduled interview on {INTERVIEW_DATE_LABEL} at {INTERVIEW_START_LABEL}. The appointment cannot proceed until it is paid.
-                </Typography>
                 <Box
                   sx={{
-                    mt: 1.25,
-                    p: { xs: 1.1, sm: 1.35 },
-                    borderRadius: "14px",
-                    bgcolor: "rgba(255, 255, 255, 0.9)",
-                    border: "1px solid rgba(237, 108, 2, 0.45)",
                     display: "flex",
-                    alignItems: "center",
+                    alignItems: "baseline",
                     justifyContent: "space-between",
                     gap: 1,
                     flexWrap: "wrap",
                   }}
                 >
-                  <Typography
-                    sx={{
-                      color: "#7c3d00",
-                      fontSize: { xs: "0.55rem", sm: "0.66rem" },
-                      fontWeight: 800,
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Amount due
+                  <Typography variant="subtitle2" fontWeight="800" sx={{ letterSpacing: "0.02em" }}>
+                    {interviewNotice.title}
                   </Typography>
                   <Typography
                     sx={{
-                      color: "#7c3d00",
-                      fontSize: { xs: "1rem", sm: "1.15rem" },
-                      fontWeight: 900,
-                      letterSpacing: "0.01em",
+                      fontSize: { xs: "0.62rem", sm: "0.68rem" },
+                      fontWeight: 700,
+                      opacity: 0.75,
                     }}
                   >
-                    {INTERVIEW_FEE_DISPLAY}
+                    {interviewNotice.note}
                   </Typography>
+                </Box>
+
+                <Box
+                  sx={{
+                    mt: 0.9,
+                    borderRadius: "14px",
+                    bgcolor: "rgba(255, 255, 255, 0.9)",
+                    border: `1px solid ${alpha(interviewNotice.color, 0.28)}`,
+                    overflow: "hidden",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 1,
+                      px: 1.25,
+                      py: 0.8,
+                    }}
+                  >
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={noticeLabelSx}>Appointment</Typography>
+                      <Typography
+                        sx={{
+                          color: "#0f2b5e",
+                          fontSize: { xs: "0.78rem", sm: "0.85rem" },
+                          fontWeight: 800,
+                          lineHeight: 1.35,
+                        }}
+                      >
+                        {INTERVIEW_DATE_LABEL} · {INTERVIEW_START_LABEL}–{INTERVIEW_END_LABEL}
+                      </Typography>
+                    </Box>
+                    <Typography
+                      sx={{
+                        color: "#64748b",
+                        fontSize: { xs: "0.6rem", sm: "0.66rem" },
+                        fontWeight: 600,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      was {INTERVIEW_MISSED_DATE_LABEL}
+                    </Typography>
+                  </Box>
+
+                  <Divider sx={{ borderColor: alpha(interviewNotice.color, 0.2) }} />
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 1,
+                      px: 1.25,
+                      py: 0.8,
+                    }}
+                  >
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={noticeLabelSx}>Amount due</Typography>
+                      <Typography
+                        sx={{
+                          color: "#475569",
+                          fontSize: { xs: "0.62rem", sm: "0.68rem" },
+                          lineHeight: 1.35,
+                        }}
+                      >
+                        {INTERVIEW_FEE_LABEL}
+                      </Typography>
+                    </Box>
+                    <Typography
+                      sx={{
+                        color: "#7c3d00",
+                        fontSize: { xs: "1.05rem", sm: "1.2rem" },
+                        fontWeight: 900,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {INTERVIEW_FEE_DISPLAY}
+                    </Typography>
+                  </Box>
                 </Box>
               </Alert>
             )}
