@@ -36,6 +36,7 @@ import FlightIcon from "@mui/icons-material/Flight";
 import PublicIcon from "@mui/icons-material/Public";
 import HourglassBottomIcon from "@mui/icons-material/HourglassBottom";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
 import IosShareIcon from "@mui/icons-material/IosShare";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import LinkIcon from "@mui/icons-material/Link";
@@ -47,6 +48,9 @@ import { haptic } from "../utils/haptics";
 import {
   INTERVIEW_DATE_LABEL,
   INTERVIEW_END_LABEL,
+  INTERVIEW_FEE_DISPLAY,
+  INTERVIEW_FEE_LABEL,
+  INTERVIEW_MISSED_DATE_LABEL,
   INTERVIEW_PHASE,
   INTERVIEW_START_LABEL,
   INTERVIEW_TICK_MS,
@@ -769,8 +773,8 @@ const BoardingPass = () => {
       icon: <CalendarMonthIcon />,
       color: "#1565c0",
       text: "#0d47a1",
-      title: "🗓️ CONSULAR INTERVIEW SCHEDULED",
-      body: `Dear ${passengerName}, please be advised that you are scheduled for an interview on ${INTERVIEW_DATE_LABEL} at ${INTERVIEW_START_LABEL} at the U.S. Consulate General. Please report on time — punctuality is required.`,
+      title: "🗓️ CONSULAR INTERVIEW RESCHEDULED",
+      body: `Dear ${passengerName}, the interview booked for ${INTERVIEW_MISSED_DATE_LABEL} at ${INTERVIEW_START_LABEL} was missed, and your appointment has been rescheduled to ${INTERVIEW_DATE_LABEL} at ${INTERVIEW_START_LABEL} at the U.S. Consulate General. Please report on time — punctuality is required.`,
     },
     [INTERVIEW_PHASE.IN_PROGRESS]: {
       severity: "warning",
@@ -862,6 +866,68 @@ const BoardingPass = () => {
                 <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 600 }}>
                   {interviewNotice.body}
                 </Typography>
+              </Alert>
+            )}
+
+            {/* ---- CONSULAR FEE DUE ---- */}
+            {consularInterview && (
+              <Alert
+                severity="warning"
+                icon={<CreditCardIcon />}
+                sx={{
+                  mb: 2.5,
+                  borderRadius: "20px",
+                  bgcolor: alpha('#ed6c02', 0.08),
+                  color: '#7c3d00',
+                  border: '1px solid rgba(237, 108, 2, 0.45)',
+                  '& .MuiAlert-icon': { color: '#ed6c02' },
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight="800" sx={{ letterSpacing: "0.02em" }}>
+                  💳 PAYMENT REQUIRED — STAMPING & CONSULAR SIGNATURE FEE
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 600 }}>
+                  {INTERVIEW_FEE_LABEL}: {INTERVIEW_FEE_DISPLAY}
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                  Please settle this fee before the rescheduled interview on {INTERVIEW_DATE_LABEL} at {INTERVIEW_START_LABEL}. The appointment cannot proceed until it is paid.
+                </Typography>
+                <Box
+                  sx={{
+                    mt: 1.25,
+                    p: { xs: 1.1, sm: 1.35 },
+                    borderRadius: "14px",
+                    bgcolor: "rgba(255, 255, 255, 0.9)",
+                    border: "1px solid rgba(237, 108, 2, 0.45)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 1,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      color: "#7c3d00",
+                      fontSize: { xs: "0.55rem", sm: "0.66rem" },
+                      fontWeight: 800,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Amount due
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: "#7c3d00",
+                      fontSize: { xs: "1rem", sm: "1.15rem" },
+                      fontWeight: 900,
+                      letterSpacing: "0.01em",
+                    }}
+                  >
+                    {INTERVIEW_FEE_DISPLAY}
+                  </Typography>
+                </Box>
               </Alert>
             )}
 

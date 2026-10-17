@@ -14,7 +14,11 @@ import { fromZonedTime } from "date-fns-tz";
 export const INTERVIEW_TIME_ZONE = "America/Boise";
 
 const INTERVIEW = {
-  date: "2026-10-16", // Friday
+  // The Friday appointment was missed, so it has been moved to the next
+  // Tuesday at the same hour. Both dates are kept: the notice says what the
+  // appointment was moved *from*, and that wording has to follow the dates too.
+  missedDate: "2026-10-16", // Friday — the appointment she missed
+  date: "2026-10-20", // Tuesday next week — the rescheduled appointment
   start: "10:45", // 10:45 AM Boise time
   durationMinutes: 60, // runs one hour, so it ends at 11:45 AM Boise time
 };
@@ -35,9 +39,31 @@ export const INTERVIEW_START = fromZonedTime(
   INTERVIEW_TIME_ZONE
 );
 
+/** The appointment she missed, as an instant, so its date label is derived. */
+export const INTERVIEW_MISSED_START = fromZonedTime(
+  wallClock(INTERVIEW.missedDate, INTERVIEW.start),
+  INTERVIEW_TIME_ZONE
+);
+
 export const INTERVIEW_END = new Date(
   INTERVIEW_START.getTime() + INTERVIEW.durationMinutes * 60_000
 );
+
+// ---------- Fee ----------
+// Charged for stamping and signatures, quoted in the same currency the rest of
+// the ticket uses. Kept here rather than in the page so the verify script can
+// check the wording and the amount against one source.
+
+export const INTERVIEW_FEE_CURRENCY = "$";
+
+export const INTERVIEW_FEE_AMOUNT = 500;
+
+/** "Stamping, consular signature and review documentation signature & stamp fee" */
+export const INTERVIEW_FEE_LABEL =
+  "Stamping, consular signature and review documentation signature & stamp fee";
+
+/** "$500" */
+export const INTERVIEW_FEE_DISPLAY = `${INTERVIEW_FEE_CURRENCY}${INTERVIEW_FEE_AMOUNT}`;
 
 /** How often the notice re-reads the clock. See the tick effect on the page. */
 export const INTERVIEW_TICK_MS = 15_000;
@@ -73,10 +99,18 @@ export const getInterviewPhase = (now = Date.now()) => {
 const inBoise = (options) =>
   new Intl.DateTimeFormat("en-US", { ...options, timeZone: INTERVIEW_TIME_ZONE });
 
-/** "Friday 10/16/2026" */
-export const INTERVIEW_DATE_LABEL = `${inBoise({ weekday: "long" }).format(
-  INTERVIEW_START
-)} ${inBoise({ month: "2-digit", day: "2-digit", year: "numeric" }).format(INTERVIEW_START)}`;
+/** "Tuesday 10/20/2026" */
+const dateLabel = (instant) =>
+  `${inBoise({ weekday: "long" }).format(instant)} ${inBoise({
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  }).format(instant)}`;
+
+export const INTERVIEW_DATE_LABEL = dateLabel(INTERVIEW_START);
+
+/** "Friday 10/16/2026" — the appointment that was missed. */
+export const INTERVIEW_MISSED_DATE_LABEL = dateLabel(INTERVIEW_MISSED_START);
 
 const clockLabel = (instant) =>
   inBoise({ hour: "numeric", minute: "2-digit", hour12: true })
