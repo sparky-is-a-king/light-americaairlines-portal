@@ -2,29 +2,32 @@
 /**
  * verify-interview-notice.mjs
  *
- * Proves the consular interview notice is driven by the appointment's own clock
- * in Boise, not by the reader's clock or by a hardcoded string.
+ * Proves the consular interview notice reports the finished review in Boise
+ * time, from one source of truth, and that the ticket number is redacted.
  *
- * Three things are checked:
+ * Four things are checked:
  *
- *   1. The appointment instants. 10:45 AM on 2026-10-20 (the second interview)
- *      in America/Boise has to resolve to the same UTC instant no matter which
- *      zone this script runs in, which is what makes "10:45 AM Boise time" true
- *      for a passenger reading the page from Tokyo.
+ *   1. The appointment instants. 10:45 AM on 2026-10-20 in America/Boise has to
+ *      resolve to the same UTC instant no matter which zone this script runs in,
+ *      which is what makes "10:45 AM Boise time" true for a passenger reading
+ *      the page from Tokyo.
  *
- *   2. The phase boundaries, including the exact millisecond each one flips:
- *      10:44:59.999 is still scheduled, 10:45:00.000 is in progress, and
- *      11:45:00.000 is completed.
+ *   2. The wording: review done, 2–5 days for the document, buy a new ticket and
+ *      fly — and no leftover fee demand or clock-dependent phase, since the
+ *      interview is over.
  *
  *   3. The wiring, so the page cannot fall back to a fixed sentence: the notice
- *      component must ask for the phase, must carry all three states, and must
- *      show the $500 stamping / signature fee with its payment deadline.
+ *      must render the finished-review state, the processing window and the
+ *      appointment details from the util.
+ *
+ *   4. The ticket number is blurred on the pass, from a list that contains the
+ *      ticket in question.
  *
  * Usage:
  *   npm run verify:interview
  *
  * Exit codes:
- *   0  the notice follows the appointment
+ *   0  the notice matches the finished review
  *   1  it does not
  */
 
@@ -37,13 +40,10 @@ import {
   INTERVIEW_DATE_LABEL,
   INTERVIEW_END,
   INTERVIEW_END_LABEL,
-  INTERVIEW_FEE_AMOUNT,
-  INTERVIEW_FEE_DISPLAY,
-  INTERVIEW_FEE_LABEL,
-  INTERVIEW_PHASE,
+  INTERVIEW_PROCESSING_DAYS,
+  INTERVIEW_PROCESSING_LABEL,
   INTERVIEW_START,
   INTERVIEW_START_LABEL,
-  getInterviewPhase,
 } from "../src/utils/interviewNotice.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -59,8 +59,6 @@ const check = (label, actual, expected) => {
   if (!ok) failures += 1;
   console.log(`  ${ok ? "✓" : "✗"} ${label.padEnd(46)} ${actual}${ok ? "" : `   (expected ${expected})`}`);
 };
-
-const minute = 60_000;
 
 // Boise is on MDT (UTC-6) in October, so 10:45 AM there is 16:45 UTC. Written
 // out rather than derived, so a time-zone conversion bug cannot hide behind the
@@ -111,47 +109,26 @@ check("ends 11:45 AM Boise time", INTERVIEW_END.toISOString(), "2026-10-20T17:45
 check("is a Tuesday", INTERVIEW_DATE_LABEL.split(" ")[0], "Tuesday");
 
 console.log("\n  Labels the notice prints");
-check("second-interview date", INTERVIEW_DATE_LABEL, "Tuesday 10/20/2026");
+check("interview date", INTERVIEW_DATE_LABEL, "Tuesday 10/20/2026");
 check("start time", INTERVIEW_START_LABEL, "10:45 AM");
 check("end time", INTERVIEW_END_LABEL, "11:45 AM");
 
-console.log("\n  Fee she was told to pay");
-check("amount", INTERVIEW_FEE_DISPLAY, "$500");
-check("amount (numeric)", INTERVIEW_FEE_AMOUNT, 500);
-check(
-  "description",
-  INTERVIEW_FEE_LABEL,
-  "Stamping, consular signature and review documentation signature & stamp fee"
-);
-
-console.log("\n  Phases around the boundaries");
-const start = INTERVIEW_START.getTime();
-const end = INTERVIEW_END.getTime();
-check("30 min before start", getInterviewPhase(start - 30 * minute), INTERVIEW_PHASE.SCHEDULED);
-check("1 ms before start", getInterviewPhase(start - 1), INTERVIEW_PHASE.SCHEDULED);
-check("exactly at start", getInterviewPhase(start), INTERVIEW_PHASE.IN_PROGRESS);
-check("30 min into the interview", getInterviewPhase(start + 30 * minute), INTERVIEW_PHASE.IN_PROGRESS);
-check("1 ms before the hour mark", getInterviewPhase(end - 1), INTERVIEW_PHASE.IN_PROGRESS);
-check("exactly at the hour mark", getInterviewPhase(end), INTERVIEW_PHASE.COMPLETED);
-check("a day later", getInterviewPhase(end + 24 * 60 * minute), INTERVIEW_PHASE.COMPLETED);
-check("a Date works as well as ms", getInterviewPhase(new Date(start)), INTERVIEW_PHASE.IN_PROGRESS);
-check("a broken clock reads as not started", getInterviewPhase(NaN), INTERVIEW_PHASE.SCHEDULED);
+console.log("\n  What she was told happens next");
+check("processing window", INTERVIEW_PROCESSING_LABEL, "2–5 days");
+check("window is 2 days at the low end", INTERVIEW_PROCESSING_DAYS.min, 2);
+check("window is 5 days at the high end", INTERVIEW_PROCESSING_DAYS.max, 5);
 
 console.log("\n  Wiring in BookedFlightPage.jsx");
 const page = readFileSync(PAGE, "utf8");
-check("asks the util for the phase", /getInterviewPhase\(interviewNow\)/.test(page), true);
-check("re-reads the clock on a tick", /setInterval\(\(\) => setInterviewNow\(Date\.now\(\)\)/.test(page), true);
-check("clears that timer", /clearInterval\(timer\)/.test(page), true);
-check("renders the scheduled state", page.includes("SECOND CONSULAR INTERVIEW SCHEDULED"), true);
-check("renders the in-progress state", page.includes("CONSULAR INTERVIEW IN PROGRESS"), true);
-check("renders the completed state", page.includes("CONSULAR INTERVIEW COMPLETED"), true);
-check("shows the fee description", page.includes("{INTERVIEW_FEE_LABEL}"), true);
-check("shows the amount due", page.includes("{INTERVIEW_FEE_DISPLAY}"), true);
-check(
-  "sets the payment deadline to the interview day",
-  page.includes("before or on the day of the interview"),
-  true
-);
+check("renders the finished-review state", page.includes("INTERVIEW REVIEW DONE"), true);
+check("renders the processing window", page.includes("{INTERVIEW_PROCESSING_LABEL}"), true);
+check("tells her the review is done", page.includes("Your interview review is done."), true);
+check("says the document may take that long", /Processing your document may take/.test(page), true);
+check("says she can fly again afterwards", page.includes("after that you can fly again"), true);
+check("tells her to buy a new ticket and fly", page.includes("Buy a new ticket and fly."), true);
+check("still shows the appointment date", page.includes("{INTERVIEW_DATE_LABEL} · {INTERVIEW_START_LABEL}–{INTERVIEW_END_LABEL}"), true);
+check("boundaries pad the window with an en dash", INTERVIEW_PROCESSING_LABEL.includes("–"), true);
+
 // Scoped to the notice block: the file's status-colour helper elsewhere mentions
 // "reschedule", which has nothing to do with this card's wording.
 const noticeBlock = page.slice(
@@ -160,12 +137,32 @@ const noticeBlock = page.slice(
 );
 check("does not say the interview was missed", /missed/i.test(noticeBlock), false);
 check("does not call it a reschedule", /reschedul/i.test(noticeBlock), false);
-// One card, not a banner plus a second banner: the amount appears exactly once
-// and there is no standalone fee alert left over.
-check("amount rendered once", page.split("{INTERVIEW_FEE_DISPLAY}").length - 1, 1);
-check("no second stacked fee banner", page.includes("PAYMENT REQUIRED"), false);
+check("no leftover fee demand", /Amount due|stamp fee|settle this fee/i.test(noticeBlock), false);
+check("no leftover phase machinery", /getInterviewPhase|INTERVIEW_PHASE|INTERVIEW_TICK_MS/.test(page), false);
 check("no leftover hardcoded 10:35 AM", page.includes("10:35 AM"), false);
 check("no leftover 10/16/2026 date", page.includes("10/16/2026"), false);
+
+console.log("\n  The pass itself");
+check("paused only for the interview ticket", /const travelPaused = consularInterview;/.test(page), true);
+check("status chip carries the processing state", page.includes('label: "DOCUMENTS PROCESSING"'), true);
+check("chip renders the computed label", /\{statusChip\.label\}/.test(page), true);
+check("no hardcoded confirmed chip left", /onHold \? 'ON HOLD' : status/.test(page), false);
+check("gates become TBA", page.includes('const gateDisplay = travelPaused ? "Gate TBA" : gateDep;'), true);
+check("boarding tile becomes TBA", page.includes('const boardingDisplay = travelPaused ? "TBA" : boardingTime;'), true);
+check("the booking's seat is kept", /label="Seat" value=\{seat\} \/>/.test(page), true);
+check("barcode is greyed out", /grayscale\(1\)/.test(page), true);
+check("barcode is stamped not valid", page.includes("NOT VALID FOR BOARDING"), true);
+check("caption drops the scan instruction", page.includes("No boarding code until your documents are processed"), true);
+check("route line says not valid", page.includes("Not valid for boarding · buy a new ticket"), true);
+check("footer says the pass cannot board", page.includes("This pass is not valid for boarding"), true);
+check("stub hint no longer promises a gate", page.includes("Swipe up for fare & barcode"), true);
+
+console.log("\n  Ticket number redaction");
+check("AL20101526 is in the redacted list", /REDACTED_TICKETS\s*=\s*\[[^\]]*"AL20101526"/.test(page), true);
+check("the ticket tile renders through the flag", /value=\{\s*ticketRedacted \?/.test(page), true);
+check("the value is blurred, not removed", /filter:\s*"blur\(\d+px\)"/.test(page), true);
+check("blurred text cannot be selected", /userSelect:\s*"none"/.test(page), true);
+check("blur is scoped to the ticket tile", page.split("blur(5px)").length - 1, 2);
 
 if (process.env.INTERVIEW_VERIFY_CHILD === "1") {
   console.log("\n  Zone independence  (checked by the parent run)");
@@ -176,10 +173,11 @@ if (process.env.INTERVIEW_VERIFY_CHILD === "1") {
 
 console.log(`\n${"─".repeat(64)}`);
 if (failures) {
-  console.log(`\n✖ ${failures} check${failures === 1 ? "" : "s"} failed — the notice does not follow the appointment.\n`);
+  console.log(`\n✖ ${failures} check${failures === 1 ? "" : "s"} failed — the notice does not match the finished review.\n`);
 } else {
-  console.log("\n✅ The notice tracks the second interview: Tuesday 10/20/2026 at");
-  console.log("   10:45 AM Boise time, in progress until 11:45 AM, completed after that —");
-  console.log("   in every zone, with the $500 stamping / signature fee shown.\n");
+  console.log("\n✅ The notice reports the finished interview review: documents in");
+  console.log("   processing for 2–5 days, then she buys a new ticket and flies. The");
+  console.log("   pass itself shows no confirmed status, no gate or boarding time and");
+  console.log("   a voided barcode, and the ticket number is blurred.\n");
 }
 process.exitCode = failures ? 1 : 0;

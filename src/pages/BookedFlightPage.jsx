@@ -47,18 +47,19 @@ import { haptic } from "../utils/haptics";
 import {
   INTERVIEW_DATE_LABEL,
   INTERVIEW_END_LABEL,
-  INTERVIEW_FEE_DISPLAY,
-  INTERVIEW_FEE_LABEL,
-  INTERVIEW_PHASE,
+  INTERVIEW_PROCESSING_LABEL,
   INTERVIEW_START_LABEL,
-  INTERVIEW_TICK_MS,
-  getInterviewPhase,
 } from "../utils/interviewNotice";
 
 // ---------- Palette ----------
 const NAVY = "#0f2b5e";
 const NAVY_DEEP = "#0a2a5a";
 const NOTCH = "#F2F2F7"; // iOS systemGroupedBackground — matches page bg so notches blend
+
+// ---------- Redacted fields ----------
+// Ticket numbers listed here are blurred on the pass, so they cannot be lifted
+// from a glance at the screen or from a screenshot of the boarding pass.
+const REDACTED_TICKETS = ["AL20101526"]; // Gina Wells
 
 // ---------- Static Fallback ----------
 const WENDY_FLIGHT = {
@@ -680,27 +681,15 @@ const BoardingPass = () => {
   const passportProcessing = isPassportProcessing();
 
   // ---------- Consular interview appointment (per-ticket note) ----------
-  // The ticket listed here has an interview booked at the U.S. Consulate
-  // General, so its notice carries the appointment details.
+  // The ticket listed here had an interview at the U.S. Consulate General. The
+  // consulate has since finished reviewing her file, so the notice states the
+  // outcome and what happens next rather than counting down to the appointment.
   const CONSULAR_INTERVIEW_TICKETS = ["AL20101526"]; // Gina Wells
   const consularInterview = (() => {
     if (!flight) return false;
     const ticketKey = `${flight.ticket_number || ""} ${flight.id || ""}`.toUpperCase();
     return CONSULAR_INTERVIEW_TICKETS.some((t) => ticketKey.includes(t));
   })();
-
-  // The notice has to change while the passenger is looking at it, so the clock
-  // is re-read on a tick rather than only at mount. Whoever has the page open
-  // when the appointment starts sees "in progress" within INTERVIEW_TICK_MS,
-  // and the same for the hour mark, with no reload. The timer runs only for the
-  // ticket that actually has an interview booked.
-  const [interviewNow, setInterviewNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!consularInterview) return undefined;
-    const timer = setInterval(() => setInterviewNow(Date.now()), INTERVIEW_TICK_MS);
-    return () => clearInterval(timer);
-  }, [consularInterview]);
-  const interviewPhase = getInterviewPhase(interviewNow);
 
   // ---------- Loading ----------
   if (loading) {
@@ -731,6 +720,7 @@ const BoardingPass = () => {
   const totalDuration = flight.total_journey_duration;
   const passengerName = flight.passenger_name;
   const ticket = flight.ticket_number;
+  const ticketRedacted = REDACTED_TICKETS.includes((ticket || "").toUpperCase());
   const seat = flight.seat;
   // Baggage for the passport-processing ticket is 4 luggage box.
   const baggage = passportProcessing ? "4 luggage box" : flight.baggage;
@@ -760,7 +750,33 @@ const BoardingPass = () => {
   const contrail = flight.contrail_warming || "Low";
 
   const hasPet = baggage?.toLowerCase().includes('pet') || false;
-  const statusColor = onHold ? "#d32f2f" : getStatusTextColor(status);
+
+  // A pass she cannot board must not read like a live boarding pass. The notice
+  // above owns the reason and the timeline; the pass itself only has to stop
+  // pretending: no confirmed status, no gate, no boarding time, no scannable
+  // code. A hold is the harder stop, so it wins when both apply.
+  const travelPaused = consularInterview;
+  const statusChip = onHold
+    ? { label: "ON HOLD", dot: "#ffffff", bg: "#d32f2f", text: "#ffffff", border: "#b71c1c" }
+    : travelPaused
+      ? {
+          label: "DOCUMENTS PROCESSING",
+          dot: "#b45309",
+          bg: alpha("#b45309", 0.14),
+          text: "#7c3d00",
+          border: alpha("#b45309", 0.55),
+        }
+      : {
+          label: status,
+          dot: getStatusTextColor(status),
+          bg: getStatusBackgroundColor(status),
+          text: getStatusTextColor(status),
+          border: alpha(getStatusBorderColor(status), 0.9),
+        };
+  // Nothing is assigned on a pass she cannot use; the new ticket issues these.
+  const gateDisplay = travelPaused ? "Gate TBA" : gateDep;
+  const gateArrDisplay = travelPaused ? "Gate TBA" : gateArr;
+  const boardingDisplay = travelPaused ? "TBA" : boardingTime;
 
   // Small caps label used inside the notice's rows.
   const noticeLabelSx = {
@@ -772,37 +788,19 @@ const BoardingPass = () => {
     lineHeight: 1.4,
   };
 
-  // The interview notice. One compact card rather than a banner plus a second
-  // banner: the phase only changes the title, the short note and the colour, and
-  // the appointment and the amount due live in two fixed rows underneath. The
-  // dates and the amount come from the appointment's own instants, so the words
-  // cannot drift from the moment the card changes.
+  // The interview notice. The review is finished, so the card no longer changes
+  // with the clock: it states the outcome, how long the document still needs and
+  // what she does next. One compact card, with the appointment and the document
+  // handling in two fixed rows; the date and time come from the appointment's
+  // own instants, so the words cannot drift from the booking.
   const interviewNotice = {
-    [INTERVIEW_PHASE.SCHEDULED]: {
-      severity: "info",
-      icon: <CalendarMonthIcon />,
-      color: "#1565c0",
-      text: "#0d47a1",
-      title: "🗓️ SECOND CONSULAR INTERVIEW SCHEDULED",
-      note: "Additional appointment",
-    },
-    [INTERVIEW_PHASE.IN_PROGRESS]: {
-      severity: "warning",
-      icon: <HourglassBottomIcon />,
-      color: "#ed6c02",
-      text: "#7c3d00",
-      title: "🕐 CONSULAR INTERVIEW IN PROGRESS",
-      note: "In progress now",
-    },
-    [INTERVIEW_PHASE.COMPLETED]: {
-      severity: "success",
-      icon: <CheckCircleIcon />,
-      color: "#2e7d32",
-      text: "#1b5e20",
-      title: "✅ CONSULAR INTERVIEW COMPLETED",
-      note: "Completed",
-    },
-  }[interviewPhase];
+    severity: "success",
+    icon: <CheckCircleIcon />,
+    color: "#2e7d32",
+    text: "#1b5e20",
+    title: "✅ INTERVIEW REVIEW DONE",
+    note: "Documents processing",
+  };
 
   // ---------- Render ----------
   return (
@@ -942,7 +940,7 @@ const BoardingPass = () => {
                     }}
                   >
                     <Box sx={{ minWidth: 0 }}>
-                      <Typography sx={noticeLabelSx}>Amount due</Typography>
+                      <Typography sx={noticeLabelSx}>Document processing</Typography>
                       <Typography
                         sx={{
                           color: "#475569",
@@ -950,18 +948,18 @@ const BoardingPass = () => {
                           lineHeight: 1.35,
                         }}
                       >
-                        {INTERVIEW_FEE_LABEL}:
+                        Your passport document is with the consulate
                       </Typography>
                     </Box>
                     <Typography
                       sx={{
-                        color: "#7c3d00",
+                        color: "#1b5e20",
                         fontSize: { xs: "1.05rem", sm: "1.2rem" },
                         fontWeight: 900,
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {INTERVIEW_FEE_DISPLAY}
+                      {INTERVIEW_PROCESSING_LABEL}
                     </Typography>
                   </Box>
                 </Box>
@@ -975,7 +973,7 @@ const BoardingPass = () => {
                     lineHeight: 1.45,
                   }}
                 >
-                  Please settle this fee before or on the day of the interview — {INTERVIEW_DATE_LABEL} at {INTERVIEW_START_LABEL}. The appointment cannot proceed until it is paid.
+                  Your interview review is done. Processing your document may take {INTERVIEW_PROCESSING_LABEL} — after that you can fly again. Buy a new ticket and fly.
                 </Typography>
               </Alert>
             )}
@@ -1145,11 +1143,11 @@ const BoardingPass = () => {
                           width: 6,
                           height: 6,
                           borderRadius: "50%",
-                          bgcolor: onHold ? "#ffffff" : statusColor,
-                          boxShadow: `0 0 0 3px ${alpha(onHold ? "#ffffff" : statusColor, 0.25)}`,
+                          bgcolor: statusChip.dot,
+                          boxShadow: `0 0 0 3px ${alpha(statusChip.dot, 0.25)}`,
                         }}
                       />
-                      {onHold ? 'ON HOLD' : status}
+                      {statusChip.label}
                     </Box>
                   }
                   size="small"
@@ -1159,9 +1157,9 @@ const BoardingPass = () => {
                     mb: 0.5,
                     height: { xs: 22, sm: 26 },
                     borderRadius: 999,
-                    backgroundColor: onHold ? '#d32f2f' : getStatusBackgroundColor(status),
-                    color: onHold ? '#ffffff' : getStatusTextColor(status),
-                    border: onHold ? '1px solid #b71c1c' : `1px solid ${alpha(getStatusBorderColor(status), 0.9)}`,
+                    backgroundColor: statusChip.bg,
+                    color: statusChip.text,
+                    border: `1px solid ${statusChip.border}`,
                   }}
                 />
                 <Typography
@@ -1171,7 +1169,7 @@ const BoardingPass = () => {
                     fontWeight: 600,
                   }}
                 >
-                  {classLabel} • Group {boardGroup}
+                  {classLabel} • Group {travelPaused ? "TBA" : boardGroup}
                 </Typography>
               </Box>
             </Box>
@@ -1209,7 +1207,7 @@ const BoardingPass = () => {
                     {depTime}
                   </Typography>
                   <Typography sx={{ color: "#94a3b8", fontSize: { xs: "0.5rem", sm: "0.65rem" }, mt: 0.25 }}>
-                    {gateDep}
+                    {gateDisplay}
                   </Typography>
                 </Box>
 
@@ -1289,7 +1287,7 @@ const BoardingPass = () => {
                     {arrTime}
                   </Typography>
                   <Typography sx={{ color: "#94a3b8", fontSize: { xs: "0.5rem", sm: "0.65rem" }, mt: 0.25 }}>
-                    {gateArr}
+                    {gateArrDisplay}
                   </Typography>
                 </Box>
               </Box>
@@ -1313,9 +1311,17 @@ const BoardingPass = () => {
                   </Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  <TimelineIcon sx={{ fontSize: 15, color: "#0891b2" }} />
-                  <Typography sx={{ color: "#0891b2", fontWeight: 700, fontSize: { xs: "0.6rem", sm: "0.75rem" } }}>
-                    {tripType} • Non‑stop
+                  <TimelineIcon
+                    sx={{ fontSize: 15, color: travelPaused ? "#b45309" : "#0891b2" }}
+                  />
+                  <Typography
+                    sx={{
+                      color: travelPaused ? "#7c3d00" : "#0891b2",
+                      fontWeight: 700,
+                      fontSize: { xs: "0.6rem", sm: "0.75rem" },
+                    }}
+                  >
+                    {travelPaused ? "Not valid for boarding · buy a new ticket" : `${tripType} • Non‑stop`}
                   </Typography>
                 </Box>
               </Box>
@@ -1324,7 +1330,29 @@ const BoardingPass = () => {
             {/* ---- FARE / SEAT TILES ---- */}
             <Grid container spacing={{ xs: 1, sm: 1.5 }} sx={{ mt: { xs: 2, sm: 2.5 } }}>
               <Grid size={{ xs: 6, sm: 3 }}>
-                <InfoTile icon={<ConfirmationNumberIcon sx={{ fontSize: 15 }} />} label="Ticket" value={ticket} />
+                <InfoTile
+                  icon={<ConfirmationNumberIcon sx={{ fontSize: 15 }} />}
+                  label="Ticket"
+                  value={
+                    ticketRedacted ? (
+                      // Blurred, not hidden: the number still sits in its slot so
+                      // the pass looks right, but it cannot be read off the screen.
+                      <Box
+                        component="span"
+                        sx={{
+                          display: "inline-block",
+                          filter: "blur(5px)",
+                          WebkitFilter: "blur(5px)",
+                          userSelect: "none",
+                        }}
+                      >
+                        {ticket}
+                      </Box>
+                    ) : (
+                      ticket
+                    )
+                  }
+                />
               </Grid>
               <Grid size={{ xs: 6, sm: 3 }}>
                 <InfoTile icon={<EventSeatIcon sx={{ fontSize: 15 }} />} label="Seat" value={seat} />
@@ -1493,7 +1521,11 @@ const BoardingPass = () => {
                     textTransform: "uppercase",
                   }}
                 >
-                  {stubExpanded ? "Swipe down to collapse" : "Swipe up for gate, total paid & barcode"}
+                  {stubExpanded
+                    ? "Swipe down to collapse"
+                    : travelPaused
+                      ? "Swipe up for fare & barcode"
+                      : "Swipe up for gate, total paid & barcode"}
                 </Typography>
                 <Motion.span
                   animate={{ rotate: stubExpanded ? 180 : 0 }}
@@ -1520,16 +1552,16 @@ const BoardingPass = () => {
 
             <Grid container spacing={{ xs: 1, sm: 1.5 }}>
               <Grid size={{ xs: 6, sm: 3 }}>
-                <InfoTile align="center" accent="#0891b2" icon={<FlightTakeoffIcon sx={{ fontSize: 15 }} />} label="Gate" value={gateDep} />
+                <InfoTile align="center" accent="#0891b2" icon={<FlightTakeoffIcon sx={{ fontSize: 15 }} />} label="Gate" value={travelPaused ? "TBA" : gateDep} />
               </Grid>
               <Grid size={{ xs: 6, sm: 3 }}>
-                <InfoTile align="center" accent="#059669" icon={<TimelineIcon sx={{ fontSize: 15 }} />} label="Boarding" value={boardingTime} />
+                <InfoTile align="center" accent="#059669" icon={<TimelineIcon sx={{ fontSize: 15 }} />} label="Boarding" value={boardingDisplay} />
               </Grid>
               <Grid size={{ xs: 6, sm: 3 }}>
                 <InfoTile align="center" accent={NAVY} icon={<EventSeatIcon sx={{ fontSize: 15 }} />} label="Seat" value={seat} />
               </Grid>
               <Grid size={{ xs: 6, sm: 3 }}>
-                <InfoTile align="center" accent="#b45309" icon={<ConfirmationNumberIcon sx={{ fontSize: 15 }} />} label="Group" value={boardGroup} />
+                <InfoTile align="center" accent="#b45309" icon={<ConfirmationNumberIcon sx={{ fontSize: 15 }} />} label="Group" value={travelPaused ? "TBA" : boardGroup} />
               </Grid>
             </Grid>
 
@@ -1586,9 +1618,32 @@ const BoardingPass = () => {
               />
             </Box>
 
-            {/* Barcode */}
+            {/* Barcode — greyed out and stamped when the pass cannot be used */}
             <Box sx={{ textAlign: "center", mt: { xs: 2, sm: 2.5 } }}>
-              <ModernBarcode />
+              <Box sx={{ position: "relative" }}>
+                <Box sx={travelPaused ? { filter: "grayscale(1)", opacity: 0.28 } : undefined}>
+                  <ModernBarcode />
+                </Box>
+                {travelPaused && (
+                  <Box sx={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
+                    <Typography
+                      sx={{
+                        px: 1.25,
+                        py: 0.4,
+                        borderRadius: 999,
+                        bgcolor: "rgba(255, 255, 255, 0.95)",
+                        color: "#7c3d00",
+                        border: `1px solid ${alpha("#b45309", 0.55)}`,
+                        fontWeight: 900,
+                        fontSize: { xs: "0.5rem", sm: "0.6rem" },
+                        letterSpacing: "0.1em",
+                      }}
+                    >
+                      NOT VALID FOR BOARDING
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
               <Box
                 sx={{
                   display: "flex",
@@ -1603,8 +1658,10 @@ const BoardingPass = () => {
                 </Typography>
                 <QrCode2Icon sx={{ color: NAVY, fontSize: { xs: 18, sm: 26 } }} />
               </Box>
-              <Typography sx={{ color: "#64748b", fontSize: { xs: "0.5rem", sm: "0.68rem" }, mt: 0.5 }}>
-                Scan for mobile boarding • {tripType} • {flightDate}
+              <Typography sx={{ color: travelPaused ? "#7c3d00" : "#64748b", fontSize: { xs: "0.5rem", sm: "0.68rem" }, mt: 0.5 }}>
+                {travelPaused
+                  ? "No boarding code until your documents are processed"
+                  : `Scan for mobile boarding • ${tripType} • ${flightDate}`}
               </Typography>
             </Box>
 
@@ -1675,8 +1732,10 @@ const BoardingPass = () => {
               textAlign: "center",
             }}
           >
-            <Typography sx={{ color: "#94a3b8", fontSize: { xs: "0.5rem", sm: "0.68rem" }, lineHeight: 1.5 }}>
-              Please arrive at the gate at least 30 minutes before departure • Have your ID ready
+            <Typography sx={{ color: travelPaused ? "#7c3d00" : "#94a3b8", fontWeight: travelPaused ? 700 : 400, fontSize: { xs: "0.5rem", sm: "0.68rem" }, lineHeight: 1.5 }}>
+              {travelPaused
+                ? "This pass is not valid for boarding • Buy a new ticket to fly once your documents are processed"
+                : "Please arrive at the gate at least 30 minutes before departure • Have your ID ready"}
             </Typography>
           </Box>
         </Paper>
