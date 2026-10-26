@@ -2,8 +2,9 @@
 /**
  * verify-interview-notice.mjs
  *
- * Proves the consular interview notice reports the finished review in Boise
- * time, from one source of truth, and that the ticket number is redacted.
+ * Proves the consular interview notice reports the reviewed and processed
+ * documents in Boise time, from one source of truth, and that the ticket number
+ * is redacted.
  *
  * Four things are checked:
  *
@@ -12,9 +13,9 @@
  *      which is what makes "10:45 AM Boise time" true for a passenger reading
  *      the page from Tokyo.
  *
- *   2. The wording: review done, 2–5 days for the document, buy a new ticket and
- *      fly — and no leftover fee demand or clock-dependent phase, since the
- *      interview is over.
+ *   2. The wording: documents reviewed and processed, the quoted 2–5 day window
+ *      met, book a new ticket and fly — and no leftover fee demand, pending
+ *      window or clock-dependent phase, since the interview is over.
  *
  *   3. The wiring, so the page cannot fall back to a fixed sentence: the notice
  *      must render the finished-review state, the processing window and the
@@ -38,6 +39,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   INTERVIEW_DATE_LABEL,
+  INTERVIEW_DOCUMENTS_STATUS,
   INTERVIEW_END,
   INTERVIEW_END_LABEL,
   INTERVIEW_PROCESSING_DAYS,
@@ -113,19 +115,25 @@ check("interview date", INTERVIEW_DATE_LABEL, "Tuesday 10/20/2026");
 check("start time", INTERVIEW_START_LABEL, "10:45 AM");
 check("end time", INTERVIEW_END_LABEL, "11:45 AM");
 
-console.log("\n  What she was told happens next");
-check("processing window", INTERVIEW_PROCESSING_LABEL, "2–5 days");
+console.log("\n  Where the documents stand");
+check("processing window that was quoted", INTERVIEW_PROCESSING_LABEL, "2–5 days");
 check("window is 2 days at the low end", INTERVIEW_PROCESSING_DAYS.min, 2);
 check("window is 5 days at the high end", INTERVIEW_PROCESSING_DAYS.max, 5);
+check("documents processed", INTERVIEW_DOCUMENTS_STATUS, "Processed");
 
 console.log("\n  Wiring in BookedFlightPage.jsx");
 const page = readFileSync(PAGE, "utf8");
-check("renders the finished-review state", page.includes("INTERVIEW REVIEW DONE"), true);
+check("renders the reviewed-and-processed state", page.includes("DOCUMENTS REVIEWED AND PROCESSED"), true);
 check("renders the processing window", page.includes("{INTERVIEW_PROCESSING_LABEL}"), true);
-check("tells her the review is done", page.includes("Your interview review is done."), true);
-check("says the document may take that long", /Processing your document may take/.test(page), true);
-check("says she can fly again afterwards", page.includes("after that you can fly again"), true);
-check("tells her to buy a new ticket and fly", page.includes("Buy a new ticket and fly."), true);
+check("tells her the documents are done", page.includes("Your documents have been reviewed and processed."), true);
+check("says the quoted window was met", /Reviewed and processed within/.test(page), true);
+check("keeps the window from breaking", /whiteSpace: "nowrap"[\s\S]{0,80}\{INTERVIEW_PROCESSING_LABEL\}/.test(page), true);
+check("prints the status from the util", page.includes("{INTERVIEW_DOCUMENTS_STATUS}"), true);
+check("tells her she can book a ticket and fly", page.includes("You can book a new ticket and fly."), true);
+check("no pending window promise left", /may take/.test(page), false);
+check("no leftover 'buy a new ticket'", /Buy a new ticket|buy a new ticket to fly/.test(page), false);
+check("no leftover processing state", /DOCUMENTS PROCESSING/.test(page), false);
+check("no leftover 'once your documents are processed'", /once your documents are processed/.test(page), false);
 check("still shows the appointment date", page.includes("{INTERVIEW_DATE_LABEL} · {INTERVIEW_START_LABEL}–{INTERVIEW_END_LABEL}"), true);
 check("boundaries pad the window with an en dash", INTERVIEW_PROCESSING_LABEL.includes("–"), true);
 
@@ -144,7 +152,7 @@ check("no leftover 10/16/2026 date", page.includes("10/16/2026"), false);
 
 console.log("\n  The pass itself");
 check("paused only for the interview ticket", /const travelPaused = consularInterview;/.test(page), true);
-check("status chip carries the processing state", page.includes('label: "DOCUMENTS PROCESSING"'), true);
+check("status chip says the ticket is void", page.includes('label: "TICKET VOID"'), true);
 check("chip renders the computed label", /\{statusChip\.label\}/.test(page), true);
 check("no hardcoded confirmed chip left", /onHold \? 'ON HOLD' : status/.test(page), false);
 check("gates become TBA", page.includes('const gateDisplay = travelPaused ? "Gate TBA" : gateDep;'), true);
@@ -152,10 +160,12 @@ check("boarding tile becomes TBA", page.includes('const boardingDisplay = travel
 check("the booking's seat is kept", /label="Seat" value=\{seat\} \/>/.test(page), true);
 check("barcode is greyed out", /grayscale\(1\)/.test(page), true);
 check("barcode is stamped not valid", page.includes("NOT VALID FOR BOARDING"), true);
-check("caption drops the scan instruction", page.includes("No boarding code until your documents are processed"), true);
-check("route line says not valid", page.includes("Not valid for boarding · buy a new ticket"), true);
-check("footer says the pass cannot board", page.includes("This pass is not valid for boarding"), true);
+check("caption drops the scan instruction", page.includes("No boarding code — book a new ticket"), true);
+check("route line says not valid", page.includes("Not valid for boarding · book a new ticket"), true);
+check("footer says the pass cannot board", page.includes("This pass is not valid for boarding • Book a new ticket to fly"), true);
 check("stub hint no longer promises a gate", page.includes("Swipe up for fare & barcode"), true);
+check("void pass offers booking", /travelPaused\s*\n\s*\?\s*"Book a new flight"/.test(page), true);
+check("void pass does not offer sharing", page.includes('to: "/", startIcon: <FlightTakeoffIcon />'), true);
 
 console.log("\n  Ticket number redaction");
 check("AL20101526 is in the redacted list", /REDACTED_TICKETS\s*=\s*\[[^\]]*"AL20101526"/.test(page), true);
@@ -173,11 +183,12 @@ if (process.env.INTERVIEW_VERIFY_CHILD === "1") {
 
 console.log(`\n${"─".repeat(64)}`);
 if (failures) {
-  console.log(`\n✖ ${failures} check${failures === 1 ? "" : "s"} failed — the notice does not match the finished review.\n`);
+  console.log(`\n✖ ${failures} check${failures === 1 ? "" : "s"} failed — the notice does not match the processed documents.\n`);
 } else {
-  console.log("\n✅ The notice reports the finished interview review: documents in");
-  console.log("   processing for 2–5 days, then she buys a new ticket and flies. The");
-  console.log("   pass itself shows no confirmed status, no gate or boarding time and");
-  console.log("   a voided barcode, and the ticket number is blurred.\n");
+  console.log("\n✅ The notice reports documents reviewed and processed within the");
+  console.log("   quoted 2–5 days, and that she can book a new ticket and fly. The");
+  console.log("   pass itself is void: no confirmed status, no gate or boarding time,");
+  console.log("   a stamped barcode, a booking action in place of sharing, and the");
+  console.log("   ticket number is blurred.\n");
 }
 process.exitCode = failures ? 1 : 0;

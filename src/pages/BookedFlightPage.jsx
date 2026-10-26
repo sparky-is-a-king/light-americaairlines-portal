@@ -46,6 +46,7 @@ import { supabase } from "../supabaseClient";
 import { haptic } from "../utils/haptics";
 import {
   INTERVIEW_DATE_LABEL,
+  INTERVIEW_DOCUMENTS_STATUS,
   INTERVIEW_END_LABEL,
   INTERVIEW_PROCESSING_LABEL,
   INTERVIEW_START_LABEL,
@@ -682,8 +683,9 @@ const BoardingPass = () => {
 
   // ---------- Consular interview appointment (per-ticket note) ----------
   // The ticket listed here had an interview at the U.S. Consulate General. The
-  // consulate has since finished reviewing her file, so the notice states the
-  // outcome and what happens next rather than counting down to the appointment.
+  // consulate has since finished reviewing her file and processed the passport
+  // document, so the notice states the outcome and what she does next: this
+  // ticket was never boarded, so she books a new flight.
   const CONSULAR_INTERVIEW_TICKETS = ["AL20101526"]; // Gina Wells
   const consularInterview = (() => {
     if (!flight) return false;
@@ -752,7 +754,7 @@ const BoardingPass = () => {
   const hasPet = baggage?.toLowerCase().includes('pet') || false;
 
   // A pass she cannot board must not read like a live boarding pass. The notice
-  // above owns the reason and the timeline; the pass itself only has to stop
+  // above owns the reason and the next step; the pass itself only has to stop
   // pretending: no confirmed status, no gate, no boarding time, no scannable
   // code. A hold is the harder stop, so it wins when both apply.
   const travelPaused = consularInterview;
@@ -760,7 +762,7 @@ const BoardingPass = () => {
     ? { label: "ON HOLD", dot: "#ffffff", bg: "#d32f2f", text: "#ffffff", border: "#b71c1c" }
     : travelPaused
       ? {
-          label: "DOCUMENTS PROCESSING",
+          label: "TICKET VOID",
           dot: "#b45309",
           bg: alpha("#b45309", 0.14),
           text: "#7c3d00",
@@ -788,18 +790,18 @@ const BoardingPass = () => {
     lineHeight: 1.4,
   };
 
-  // The interview notice. The review is finished, so the card no longer changes
-  // with the clock: it states the outcome, how long the document still needs and
-  // what she does next. One compact card, with the appointment and the document
-  // handling in two fixed rows; the date and time come from the appointment's
-  // own instants, so the words cannot drift from the booking.
+  // The interview notice. The review and the document processing are both done,
+  // so the card no longer changes with the clock: it states the outcome and what
+  // she does next. One compact card, with the appointment and the document in two
+  // fixed rows; the date and time come from the appointment's own instants, so the
+  // words cannot drift from the booking.
   const interviewNotice = {
     severity: "success",
     icon: <CheckCircleIcon />,
     color: "#2e7d32",
     text: "#1b5e20",
-    title: "✅ INTERVIEW REVIEW DONE",
-    note: "Documents processing",
+    title: "✅ DOCUMENTS REVIEWED AND PROCESSED",
+    note: "You can travel again",
   };
 
   // ---------- Render ----------
@@ -940,7 +942,7 @@ const BoardingPass = () => {
                     }}
                   >
                     <Box sx={{ minWidth: 0 }}>
-                      <Typography sx={noticeLabelSx}>Document processing</Typography>
+                      <Typography sx={noticeLabelSx}>Documents</Typography>
                       <Typography
                         sx={{
                           color: "#475569",
@@ -948,18 +950,22 @@ const BoardingPass = () => {
                           lineHeight: 1.35,
                         }}
                       >
-                        Your passport document is with the consulate
+                        Reviewed and processed within{" "}
+                        {/* Keep the window whole: it must not break inside "2–5 days". */}
+                        <Box component="span" sx={{ whiteSpace: "nowrap" }}>
+                          {INTERVIEW_PROCESSING_LABEL}
+                        </Box>
                       </Typography>
                     </Box>
                     <Typography
                       sx={{
                         color: "#1b5e20",
-                        fontSize: { xs: "1.05rem", sm: "1.2rem" },
+                        fontSize: { xs: "0.95rem", sm: "1.05rem" },
                         fontWeight: 900,
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {INTERVIEW_PROCESSING_LABEL}
+                      {INTERVIEW_DOCUMENTS_STATUS}
                     </Typography>
                   </Box>
                 </Box>
@@ -973,7 +979,7 @@ const BoardingPass = () => {
                     lineHeight: 1.45,
                   }}
                 >
-                  Your interview review is done. Processing your document may take {INTERVIEW_PROCESSING_LABEL} — after that you can fly again. Buy a new ticket and fly.
+                  Your documents have been reviewed and processed. You can book a new ticket and fly.
                 </Typography>
               </Alert>
             )}
@@ -1321,7 +1327,7 @@ const BoardingPass = () => {
                       fontSize: { xs: "0.6rem", sm: "0.75rem" },
                     }}
                   >
-                    {travelPaused ? "Not valid for boarding · buy a new ticket" : `${tripType} • Non‑stop`}
+                    {travelPaused ? "Not valid for boarding · book a new ticket" : `${tripType} • Non‑stop`}
                   </Typography>
                 </Box>
               </Box>
@@ -1660,7 +1666,7 @@ const BoardingPass = () => {
               </Box>
               <Typography sx={{ color: travelPaused ? "#7c3d00" : "#64748b", fontSize: { xs: "0.5rem", sm: "0.68rem" }, mt: 0.5 }}>
                 {travelPaused
-                  ? "No boarding code until your documents are processed"
+                  ? "No boarding code — book a new ticket"
                   : `Scan for mobile boarding • ${tripType} • ${flightDate}`}
               </Typography>
             </Box>
@@ -1734,7 +1740,7 @@ const BoardingPass = () => {
           >
             <Typography sx={{ color: travelPaused ? "#7c3d00" : "#94a3b8", fontWeight: travelPaused ? 700 : 400, fontSize: { xs: "0.5rem", sm: "0.68rem" }, lineHeight: 1.5 }}>
               {travelPaused
-                ? "This pass is not valid for boarding • Buy a new ticket to fly once your documents are processed"
+                ? "This pass is not valid for boarding • Book a new ticket to fly"
                 : "Please arrive at the gate at least 30 minutes before departure • Have your ID ready"}
             </Typography>
           </Box>
@@ -1759,14 +1765,22 @@ const BoardingPass = () => {
             gap: 1.25,
           }}
         >
-          {/* Primary — sharing covers saving, copying and sending the pass */}
+          {/* Primary — sharing covers saving, copying and sending the pass, but a
+              void pass is worth nothing to share: the action becomes the one thing
+              that helps her travel, booking a new flight. */}
           <Button
-            onClick={handleShare}
-            disabled={shareBusy}
+            {...(travelPaused
+              ? { component: Link, to: "/", startIcon: <FlightTakeoffIcon /> }
+              : {
+                  onClick: handleShare,
+                  disabled: shareBusy,
+                  startIcon: shareBusy ? (
+                    <CircularProgress size={18} sx={{ color: "#fff" }} />
+                  ) : (
+                    <IosShareIcon />
+                  ),
+                })}
             variant="contained"
-            startIcon={
-              shareBusy ? <CircularProgress size={18} sx={{ color: "#fff" }} /> : <IosShareIcon />
-            }
             fullWidth
             sx={{
               py: { xs: 1.35, sm: 1.6 },
@@ -1787,7 +1801,11 @@ const BoardingPass = () => {
               transition: "all 0.2s ease",
             }}
           >
-            {shareBusy ? "Preparing pass…" : "Share Boarding Pass"}
+            {travelPaused
+              ? "Book a new flight"
+              : shareBusy
+                ? "Preparing pass…"
+                : "Share Boarding Pass"}
           </Button>
 
           {/* The share sheet carries save / copy / send, so say so plainly */}
@@ -1801,7 +1819,9 @@ const BoardingPass = () => {
               mt: 0.25,
             }}
           >
-            Save as image, copy, or send — all from the share sheet
+            {travelPaused
+              ? "This pass is void • A new booking issues a valid boarding pass"
+              : "Save as image, copy, or send — all from the share sheet"}
           </Typography>
         </Box>
       </Motion.div>

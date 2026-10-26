@@ -40,15 +40,19 @@ export const INTERVIEW_END = new Date(
   INTERVIEW_START.getTime() + INTERVIEW.durationMinutes * 60_000
 );
 
-// ---------- What happens next ----------
-// The consulate's review is finished; the passport document itself still has to
-// be processed before she can travel again. Kept here rather than in the page so
-// the wording and the number of days cannot drift apart.
+// ---------- Where the document stands ----------
+// The consulate's review is finished and the passport document has since been
+// processed, so the notice reports the outcome rather than a countdown. The
+// window quoted while it was pending is kept so the notice can say it was met,
+// and so that wording and the number of days cannot drift apart.
 
 export const INTERVIEW_PROCESSING_DAYS = { min: 2, max: 5 };
 
 /** "2–5 days" */
 export const INTERVIEW_PROCESSING_LABEL = `${INTERVIEW_PROCESSING_DAYS.min}–${INTERVIEW_PROCESSING_DAYS.max} days`;
+
+/** The outcome the notice prints now that the window has passed. */
+export const INTERVIEW_DOCUMENTS_STATUS = "Processed";
 
 // ---------- Display labels ----------
 // Derived from the instants above and read back in Boise time, so the words in
