@@ -19,12 +19,12 @@ FROM public.flights;
 UPDATE public.flights
 SET
   total_price = '1209.00',
-  baggage = '4 luggage box'
+  baggage = '4 checked bags'
 WHERE ticket_number = 'AA173-001';
 
 -- Alternative: update by id if you prefer exact-row targeting
 -- UPDATE public.flights
--- SET total_price = '1209.00', baggage = '4 luggage box'
+-- SET total_price = '1209.00', baggage = '4 checked bags'
 -- WHERE id = '<paste-the-id-from-step-1>';
 
 -- 3) Verify the change

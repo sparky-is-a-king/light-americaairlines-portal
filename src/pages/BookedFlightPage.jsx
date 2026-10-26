@@ -46,11 +46,8 @@ import { supabase } from "../supabaseClient";
 import { formatBaggage } from "../utils/baggageLabel";
 import { haptic } from "../utils/haptics";
 import {
-  INTERVIEW_DATE_LABEL,
   INTERVIEW_DOCUMENTS_STATUS,
-  INTERVIEW_END_LABEL,
   INTERVIEW_PROCESSING_LABEL,
-  INTERVIEW_START_LABEL,
 } from "../utils/interviewNotice";
 
 // ---------- Palette ----------
@@ -725,8 +722,8 @@ const BoardingPass = () => {
   const ticket = flight.ticket_number;
   const ticketRedacted = REDACTED_TICKETS.includes((ticket || "").toUpperCase());
   const seat = flight.seat;
-  // Baggage for the passport-processing ticket is four checked bags; the stored
-  // label for other bookings is normalised to the same wording.
+  // Baggage for the passport-processing ticket is four checked bags; a stored
+  // label for any other booking is printed in the same wording.
   const baggage = formatBaggage(passportProcessing ? "4 checked bags" : flight.baggage);
   const flightDate = formatDate(flight.flight_date);
   const flightWeekday = formatWeekday(flight.flight_date);
@@ -794,9 +791,9 @@ const BoardingPass = () => {
 
   // The interview notice. The review and the document processing are both done,
   // so the card no longer changes with the clock: it states the outcome and what
-  // she does next. One compact card, with the appointment and the document in two
-  // fixed rows; the date and time come from the appointment's own instants, so the
-  // words cannot drift from the booking.
+  // she does next. One compact card, one fixed row: the document and how long it
+  // took. The appointment itself is no longer shown — it is history now, and the
+  // date and time of an interview she has already attended only invite a question.
   const interviewNotice = {
     severity: "success",
     icon: <CheckCircleIcon />,
@@ -906,33 +903,6 @@ const BoardingPass = () => {
                     overflow: "hidden",
                   }}
                 >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 1,
-                      px: 1.25,
-                      py: 0.8,
-                    }}
-                  >
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography sx={noticeLabelSx}>Appointment</Typography>
-                      <Typography
-                        sx={{
-                          color: "#0f2b5e",
-                          fontSize: { xs: "0.78rem", sm: "0.85rem" },
-                          fontWeight: 800,
-                          lineHeight: 1.35,
-                        }}
-                      >
-                        {INTERVIEW_DATE_LABEL} · {INTERVIEW_START_LABEL}–{INTERVIEW_END_LABEL}
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Divider sx={{ borderColor: alpha(interviewNotice.color, 0.2) }} />
-
                   <Box
                     sx={{
                       display: "flex",

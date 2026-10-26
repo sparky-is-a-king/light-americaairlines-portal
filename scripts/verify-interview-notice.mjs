@@ -18,8 +18,8 @@
  *      window or clock-dependent phase, since the interview is over.
  *
  *   3. The wiring, so the page cannot fall back to a fixed sentence: the notice
- *      must render the finished-review state, the processing window and the
- *      appointment details from the util.
+ *      must render the finished-review state and the processing window from the
+ *      util, and must not put the appointment's date and time back on the card.
  *
  *   4. The ticket number is blurred on the pass, from a list that contains the
  *      ticket in question.
@@ -114,7 +114,7 @@ check("starts 10:45 AM Boise time", INTERVIEW_START.toISOString(), EXPECTED_STAR
 check("ends 11:45 AM Boise time", INTERVIEW_END.toISOString(), "2026-10-20T17:45:00.000Z");
 check("is a Tuesday", INTERVIEW_DATE_LABEL.split(" ")[0], "Tuesday");
 
-console.log("\n  Labels the notice prints");
+console.log("\n  Recorded appointment  (the card no longer shows it)");
 check("interview date", INTERVIEW_DATE_LABEL, "Tuesday 10/20/2026");
 check("start time", INTERVIEW_START_LABEL, "10:45 AM");
 check("end time", INTERVIEW_END_LABEL, "11:45 AM");
@@ -138,7 +138,9 @@ check("no pending window promise left", /may take/.test(page), false);
 check("no leftover 'buy a new ticket'", /Buy a new ticket|buy a new ticket to fly/.test(page), false);
 check("no leftover processing state", /DOCUMENTS PROCESSING/.test(page), false);
 check("no leftover 'once your documents are processed'", /once your documents are processed/.test(page), false);
-check("still shows the appointment date", page.includes("{INTERVIEW_DATE_LABEL} · {INTERVIEW_START_LABEL}–{INTERVIEW_END_LABEL}"), true);
+check("no appointment date printed", page.includes("{INTERVIEW_DATE_LABEL}"), false);
+check("no interview times printed", /\{INTERVIEW_START_LABEL\}|\{INTERVIEW_END_LABEL\}/.test(page), false);
+check("only the document row is wired", /noticeLabelSx\}>Documents</.test(page), true);
 check("boundaries pad the window with an en dash", INTERVIEW_PROCESSING_LABEL.includes("–"), true);
 
 // Scoped to the notice block: the file's status-colour helper elsewhere mentions
@@ -147,6 +149,7 @@ const noticeBlock = page.slice(
   page.indexOf("CONSULAR INTERVIEW + FEE"),
   page.indexOf("HOLD BANNER")
 );
+check("no appointment row on the card", /Appointment/.test(noticeBlock), false);
 check("does not say the interview was missed", /missed/i.test(noticeBlock), false);
 check("does not call it a reschedule", /reschedul/i.test(noticeBlock), false);
 check("no leftover fee demand", /Amount due|stamp fee|settle this fee/i.test(noticeBlock), false);
@@ -181,6 +184,9 @@ check("empty label stays empty", formatBaggage(""), "");
 check("the pass formats its baggage", /const baggage = formatBaggage\(/.test(page), true);
 check("this ticket prints four checked bags", page.includes('passportProcessing ? "4 checked bags"'), true);
 check("no raw 'luggage box' on the pass", /passportProcessing \? "\d+ luggage box"/.test(page), false);
+const sql = readFileSync(path.join(ROOT, "update-flight.sql"), "utf8");
+check("maintenance SQL stores the correct label", sql.includes("baggage = '4 checked bags'"), true);
+check("maintenance SQL has no 'luggage box'", /luggage box/i.test(sql), false);
 
 console.log("\n  Ticket number redaction");
 check("AL20101526 is in the redacted list", /REDACTED_TICKETS\s*=\s*\[[^\]]*"AL20101526"/.test(page), true);
