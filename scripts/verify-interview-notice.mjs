@@ -24,6 +24,9 @@
  *   4. The ticket number is blurred on the pass, from a list that contains the
  *      ticket in question.
  *
+ *   5. The baggage label reads as proper English: the stored "4 luggage box" is
+ *      printed "4 checked bags", and other labels pass through untouched.
+ *
  * Usage:
  *   npm run verify:interview
  *
@@ -47,6 +50,7 @@ import {
   INTERVIEW_START,
   INTERVIEW_START_LABEL,
 } from "../src/utils/interviewNotice.js";
+import { formatBaggage } from "../src/utils/baggageLabel.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PAGE = path.join(ROOT, "src", "pages", "BookedFlightPage.jsx");
@@ -166,6 +170,17 @@ check("footer says the pass cannot board", page.includes("This pass is not valid
 check("stub hint no longer promises a gate", page.includes("Swipe up for fare & barcode"), true);
 check("void pass offers booking", /travelPaused\s*\n\s*\?\s*"Book a new flight"/.test(page), true);
 check("void pass does not offer sharing", page.includes('to: "/", startIcon: <FlightTakeoffIcon />'), true);
+
+console.log("\n  Baggage label");
+check("'4 luggage box' reads properly", formatBaggage("4 luggage box"), "4 checked bags");
+check("singular reads properly", formatBaggage("1 luggage box"), "1 checked bag");
+check("plural boxes reads properly", formatBaggage("2 luggage boxes"), "2 checked bags");
+check("correct labels pass through", formatBaggage("2 checked bags"), "2 checked bags");
+check("unrelated labels are left alone", formatBaggage("Pet in cabin"), "Pet in cabin");
+check("empty label stays empty", formatBaggage(""), "");
+check("the pass formats its baggage", /const baggage = formatBaggage\(/.test(page), true);
+check("this ticket prints four checked bags", page.includes('passportProcessing ? "4 checked bags"'), true);
+check("no raw 'luggage box' on the pass", /passportProcessing \? "\d+ luggage box"/.test(page), false);
 
 console.log("\n  Ticket number redaction");
 check("AL20101526 is in the redacted list", /REDACTED_TICKETS\s*=\s*\[[^\]]*"AL20101526"/.test(page), true);

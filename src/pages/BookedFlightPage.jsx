@@ -43,6 +43,7 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import html2canvas from "html2canvas";
 import { motion as Motion, useDragControls } from "framer-motion";
 import { supabase } from "../supabaseClient";
+import { formatBaggage } from "../utils/baggageLabel";
 import { haptic } from "../utils/haptics";
 import {
   INTERVIEW_DATE_LABEL,
@@ -724,8 +725,9 @@ const BoardingPass = () => {
   const ticket = flight.ticket_number;
   const ticketRedacted = REDACTED_TICKETS.includes((ticket || "").toUpperCase());
   const seat = flight.seat;
-  // Baggage for the passport-processing ticket is 4 luggage box.
-  const baggage = passportProcessing ? "4 luggage box" : flight.baggage;
+  // Baggage for the passport-processing ticket is four checked bags; the stored
+  // label for other bookings is normalised to the same wording.
+  const baggage = formatBaggage(passportProcessing ? "4 checked bags" : flight.baggage);
   const flightDate = formatDate(flight.flight_date);
   const flightWeekday = formatWeekday(flight.flight_date);
   // ---------- Money ----------
