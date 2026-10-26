@@ -13,9 +13,9 @@
  *      which is what makes "10:45 AM Boise time" true for a passenger reading
  *      the page from Tokyo.
  *
- *   2. The wording: documents reviewed and processed, the quoted 2–5 day window
- *      met, book a new ticket and fly — and no leftover fee demand, pending
- *      window or clock-dependent phase, since the interview is over.
+ *   2. The wording: documents reviewed and processed, book a new ticket and fly
+ *      — and no leftover fee demand, delivery window, appointment or
+ *      clock-dependent phase, since the interview is over.
  *
  *   3. The wiring, so the page cannot fall back to a fixed sentence: the notice
  *      must render the finished-review state and the processing window from the
@@ -45,8 +45,6 @@ import {
   INTERVIEW_DOCUMENTS_STATUS,
   INTERVIEW_END,
   INTERVIEW_END_LABEL,
-  INTERVIEW_PROCESSING_DAYS,
-  INTERVIEW_PROCESSING_LABEL,
   INTERVIEW_START,
   INTERVIEW_START_LABEL,
 } from "../src/utils/interviewNotice.js";
@@ -120,18 +118,14 @@ check("start time", INTERVIEW_START_LABEL, "10:45 AM");
 check("end time", INTERVIEW_END_LABEL, "11:45 AM");
 
 console.log("\n  Where the documents stand");
-check("processing window that was quoted", INTERVIEW_PROCESSING_LABEL, "2–5 days");
-check("window is 2 days at the low end", INTERVIEW_PROCESSING_DAYS.min, 2);
-check("window is 5 days at the high end", INTERVIEW_PROCESSING_DAYS.max, 5);
 check("documents processed", INTERVIEW_DOCUMENTS_STATUS, "Processed");
 
 console.log("\n  Wiring in BookedFlightPage.jsx");
 const page = readFileSync(PAGE, "utf8");
 check("renders the reviewed-and-processed state", page.includes("DOCUMENTS REVIEWED AND PROCESSED"), true);
-check("renders the processing window", page.includes("{INTERVIEW_PROCESSING_LABEL}"), true);
 check("tells her the documents are done", page.includes("Your documents have been reviewed and processed."), true);
-check("says the quoted window was met", /Reviewed and processed within/.test(page), true);
-check("keeps the window from breaking", /whiteSpace: "nowrap"[\s\S]{0,80}\{INTERVIEW_PROCESSING_LABEL\}/.test(page), true);
+check("no delivery window printed", /within\s|\b2–5\b|PROCESSING_LABEL/.test(page), false);
+check("no countdown wording left", /days/.test(page.slice(page.indexOf("CONSULAR INTERVIEW"), page.indexOf("HOLD BANNER"))), false);
 check("prints the status from the util", page.includes("{INTERVIEW_DOCUMENTS_STATUS}"), true);
 check("tells her she can book a ticket and fly", page.includes("You can book a new ticket and fly."), true);
 check("no pending window promise left", /may take/.test(page), false);
@@ -141,7 +135,7 @@ check("no leftover 'once your documents are processed'", /once your documents ar
 check("no appointment date printed", page.includes("{INTERVIEW_DATE_LABEL}"), false);
 check("no interview times printed", /\{INTERVIEW_START_LABEL\}|\{INTERVIEW_END_LABEL\}/.test(page), false);
 check("only the document row is wired", /noticeLabelSx\}>Documents</.test(page), true);
-check("boundaries pad the window with an en dash", INTERVIEW_PROCESSING_LABEL.includes("–"), true);
+check("the row is just label and status", /noticeLabelSx\}>Documents<\/Typography>\s*<\/Box>/.test(page), true);
 
 // Scoped to the notice block: the file's status-colour helper elsewhere mentions
 // "reschedule", which has nothing to do with this card's wording.
@@ -206,8 +200,9 @@ console.log(`\n${"─".repeat(64)}`);
 if (failures) {
   console.log(`\n✖ ${failures} check${failures === 1 ? "" : "s"} failed — the notice does not match the processed documents.\n`);
 } else {
-  console.log("\n✅ The notice reports documents reviewed and processed within the");
-  console.log("   quoted 2–5 days, and that she can book a new ticket and fly. The");
+  console.log("\n✅ The notice reports the documents reviewed and processed, with");
+  console.log("   no window, date or time left on the card, and that she can book a");
+  console.log("   new ticket and fly. The");
   console.log("   pass itself is void: no confirmed status, no gate or boarding time,");
   console.log("   a stamped barcode, a booking action in place of sharing, and the");
   console.log("   ticket number is blurred.\n");

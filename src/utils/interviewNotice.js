@@ -42,16 +42,11 @@ export const INTERVIEW_END = new Date(
 
 // ---------- Where the document stands ----------
 // The consulate's review is finished and the passport document has since been
-// processed, so the notice reports the outcome rather than a countdown. The
-// window quoted while it was pending is kept so the notice can say it was met,
-// and so that wording and the number of days cannot drift apart.
+// processed, so the notice reports the outcome on its own. The delivery window
+// that was quoted while it was pending is deliberately gone: once the file is
+// done, a countdown only reads as a deadline still running.
 
-export const INTERVIEW_PROCESSING_DAYS = { min: 2, max: 5 };
-
-/** "2–5 days" */
-export const INTERVIEW_PROCESSING_LABEL = `${INTERVIEW_PROCESSING_DAYS.min}–${INTERVIEW_PROCESSING_DAYS.max} days`;
-
-/** The outcome the notice prints now that the window has passed. */
+/** The outcome the notice prints now that the documents are done. */
 export const INTERVIEW_DOCUMENTS_STATUS = "Processed";
 
 // ---------- Display labels ----------

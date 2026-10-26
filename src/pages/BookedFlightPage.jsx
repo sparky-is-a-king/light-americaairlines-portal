@@ -45,10 +45,7 @@ import { motion as Motion, useDragControls } from "framer-motion";
 import { supabase } from "../supabaseClient";
 import { formatBaggage } from "../utils/baggageLabel";
 import { haptic } from "../utils/haptics";
-import {
-  INTERVIEW_DOCUMENTS_STATUS,
-  INTERVIEW_PROCESSING_LABEL,
-} from "../utils/interviewNotice";
+import { INTERVIEW_DOCUMENTS_STATUS } from "../utils/interviewNotice";
 
 // ---------- Palette ----------
 const NAVY = "#0f2b5e";
@@ -791,9 +788,9 @@ const BoardingPass = () => {
 
   // The interview notice. The review and the document processing are both done,
   // so the card no longer changes with the clock: it states the outcome and what
-  // she does next. One compact card, one fixed row: the document and how long it
-  // took. The appointment itself is no longer shown — it is history now, and the
-  // date and time of an interview she has already attended only invite a question.
+  // she does next. One compact card, one row: the document and where it stands.
+  // The appointment and the delivery window are gone — both are history, and a
+  // date, a time or a countdown on a finished file only invites a question.
   const interviewNotice = {
     severity: "success",
     icon: <CheckCircleIcon />,
@@ -915,19 +912,6 @@ const BoardingPass = () => {
                   >
                     <Box sx={{ minWidth: 0 }}>
                       <Typography sx={noticeLabelSx}>Documents</Typography>
-                      <Typography
-                        sx={{
-                          color: "#475569",
-                          fontSize: { xs: "0.62rem", sm: "0.68rem" },
-                          lineHeight: 1.35,
-                        }}
-                      >
-                        Reviewed and processed within{" "}
-                        {/* Keep the window whole: it must not break inside "2–5 days". */}
-                        <Box component="span" sx={{ whiteSpace: "nowrap" }}>
-                          {INTERVIEW_PROCESSING_LABEL}
-                        </Box>
-                      </Typography>
                     </Box>
                     <Typography
                       sx={{
