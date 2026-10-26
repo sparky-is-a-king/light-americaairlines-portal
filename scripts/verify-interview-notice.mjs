@@ -168,6 +168,13 @@ check("stub hint no longer promises a gate", page.includes("Swipe up for fare & 
 check("void pass offers booking", /travelPaused\s*\n\s*\?\s*"Book a new flight"/.test(page), true);
 check("void pass does not offer sharing", page.includes('to: "/", startIcon: <FlightTakeoffIcon />'), true);
 
+console.log("\n  Document thumbnails");
+check("three passport copies render", (page.match(/<DocumentThumb \/>/g) || []).length, 3);
+check("the copies are blurred", /filter: "blur\(1\.4px\)"/.test(page), true);
+check("the copies stay decorative", page.includes('aria-hidden="true"'), true);
+check("the count is said in words", page.includes("3 passport copies"), true);
+check("the copies stay small", /width: \{ xs: 42, sm: 52 \}/.test(page), true);
+
 console.log("\n  Baggage label");
 check("'4 luggage box' reads properly", formatBaggage("4 luggage box"), "4 checked bags");
 check("singular reads properly", formatBaggage("1 luggage box"), "1 checked bag");

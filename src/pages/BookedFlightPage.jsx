@@ -125,6 +125,51 @@ const SectionHeading = ({ icon, children }) => (
   </Box>
 );
 
+// ---------- Blurred document thumbnails ----------
+// Miniature passport pages on the notice: enough to show what was processed,
+// never enough to read. Deliberately small, and blurred here rather than
+// illustrated, so the detail a passenger sees is the same nothing a stranger
+// looking over their shoulder would get. The words beside them carry the count,
+// so the images stay decorative and are hidden from screen readers.
+const DocumentThumb = () => (
+  <Box
+    aria-hidden="true"
+    sx={{
+      width: { xs: 42, sm: 52 },
+      height: { xs: 30, sm: 37 },
+      p: "3px",
+      display: "flex",
+      gap: "3px",
+      borderRadius: "5px",
+      bgcolor: "#eef3fa",
+      border: "1px solid rgba(15, 43, 94, 0.18)",
+      boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.8)",
+      filter: "blur(1.4px)",
+      opacity: 0.9,
+      flexShrink: 0,
+      overflow: "hidden",
+    }}
+  >
+    <Box sx={{ width: "34%", borderRadius: "3px", bgcolor: "#b9c8dc" }} />
+    <Box
+      sx={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        gap: "3px",
+      }}
+    >
+      {[70, 100, 55].map((width) => (
+        <Box
+          key={width}
+          sx={{ height: 3, width: `${width}%`, borderRadius: 1, bgcolor: "#b9c8dc" }}
+        />
+      ))}
+    </Box>
+  </Box>
+);
+
 // ---------- Modern Barcode ----------
 const ModernBarcode = () => (
   <Box sx={{
@@ -922,6 +967,33 @@ const BoardingPass = () => {
                       }}
                     >
                       {INTERVIEW_DOCUMENTS_STATUS}
+                    </Typography>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: { xs: 0.5, sm: 0.75 },
+                      px: 1.25,
+                      pb: 0.9,
+                    }}
+                  >
+                    <DocumentThumb />
+                    <DocumentThumb />
+                    <DocumentThumb />
+                    <Typography
+                      sx={{
+                        ml: 0.35,
+                        color: "#64748b",
+                        fontSize: { xs: "0.5rem", sm: "0.58rem" },
+                        fontWeight: 800,
+                        letterSpacing: "0.06em",
+                        textTransform: "uppercase",
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      3 passport copies
                     </Typography>
                   </Box>
                 </Box>
