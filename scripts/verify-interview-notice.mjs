@@ -169,10 +169,13 @@ check("void pass offers booking", /travelPaused\s*\n\s*\?\s*"Book a new flight"/
 check("void pass does not offer sharing", page.includes('to: "/", startIcon: <FlightTakeoffIcon />'), true);
 
 console.log("\n  Document thumbnails");
-check("three passport copies render", (page.match(/<DocumentThumb \/>/g) || []).length, 3);
+check("three layouts are defined", (page.match(/\{ (?:photo|cover):/g) || []).length, 3);
+check("the copies render from the list", /DOCUMENT_THUMBS\.map\(\(layout/.test(page), true);
+check("the copies are not identical", /photo: "right"/.test(page) && /cover: true/.test(page), true);
 check("the copies are blurred", /filter: "blur\(1\.4px\)"/.test(page), true);
 check("the copies stay decorative", page.includes('aria-hidden="true"'), true);
-check("the count is said in words", page.includes("3 passport copies"), true);
+check("no caption beside the copies", page.includes("3 passport copies"), false);
+check("the strip announces itself", /aria-label="Three passport copies on file/.test(page), true);
 check("the copies stay small", /width: \{ xs: 42, sm: 52 \}/.test(page), true);
 
 console.log("\n  Baggage label");
