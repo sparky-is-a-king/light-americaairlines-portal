@@ -57,6 +57,14 @@ const NOTCH = "#F2F2F7"; // iOS systemGroupedBackground — matches page bg so n
 // from a glance at the screen or from a screenshot of the boarding pass.
 const REDACTED_TICKETS = ["AL20101526"]; // Gina Wells
 
+// ---------- Connections ----------
+// A multi-leg itinerary still prints one route summary, so the airports between
+// departure and arrival are named under the duration instead of stacking every
+// leg into the route row.
+const CONNECTION_AIRPORTS = {
+  AL102037886: ["DFW", "ORD"], // Gina Wells — BOI → DFW → ORD → FWA
+};
+
 // ---------- Static Fallback ----------
 const WENDY_FLIGHT = {
   flight_number: 'AA173',
@@ -812,7 +820,14 @@ const BoardingPass = () => {
   const flightWeekday = formatWeekday(flight.flight_date);
   // ---------- Money ----------
   const currencySymbol = flight.currency || "$";
-  const totalPrice = `${currencySymbol}${flight.total_price || "1,850"}`;
+  // Numbers enter the table without grouping (1477), so format them the way a
+  // fare is read; string prices are printed exactly as stored.
+  const rawPrice = flight.total_price ?? "1,850";
+  const priceLabel =
+    typeof rawPrice === "number"
+      ? rawPrice.toLocaleString("en-US", { maximumFractionDigits: 2 })
+      : String(rawPrice);
+  const totalPrice = `${currencySymbol}${priceLabel}`;
   const gateDep = flight.gate_departure || "Gate 4";
   const gateArr = flight.gate_arrival || "Gate 2";
   const status = flight.status || "Confirmed";
@@ -821,6 +836,16 @@ const BoardingPass = () => {
   const operated = flight.operated_by;
   const flightNum = flight.flight_number;
   const tripType = flight.trip_type || "ONE WAY";
+
+  // One flight number per leg, separated by slashes. Anything beyond a single
+  // number is a connection, so the footer can stop calling every pass non-stop.
+  const legCount = String(flightNum || "")
+    .split("/")
+    .map((leg) => leg.trim())
+    .filter(Boolean).length;
+  const stopCount = Math.max(0, legCount - 1);
+  const stopsLabel = stopCount === 0 ? "Non‑stop" : `${stopCount} stop${stopCount === 1 ? "" : "s"}`;
+  const connections = CONNECTION_AIRPORTS[(ticket || "").toUpperCase()] || [];
   const classLabel = flight.class;
   const boardGroup = flight.boarding_group;
 
@@ -1330,6 +1355,19 @@ const BoardingPass = () => {
                       <FlightTakeoffIcon sx={{ fontSize: { xs: 12, sm: 15 }, color: NAVY }} />
                     </Box>
                   </Box>
+                  {connections.length > 0 && (
+                    <Typography
+                      sx={{
+                        textAlign: "center",
+                        color: "#64748b",
+                        fontWeight: 600,
+                        fontSize: { xs: "0.5rem", sm: "0.62rem" },
+                        mt: 0.75,
+                      }}
+                    >
+                      via {connections.join(" · ")}
+                    </Typography>
+                  )}
                 </Box>
 
                 <Box sx={{ textAlign: "center", minWidth: { xs: 62, sm: 92 } }}>
@@ -1385,7 +1423,7 @@ const BoardingPass = () => {
                       fontSize: { xs: "0.6rem", sm: "0.75rem" },
                     }}
                   >
-                    {travelPaused ? "Not valid for boarding · book a new ticket" : `${tripType} • Non‑stop`}
+                    {travelPaused ? "Not valid for boarding · book a new ticket" : `${tripType} • ${stopsLabel}`}
                   </Typography>
                 </Box>
               </Box>
