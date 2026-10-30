@@ -62,7 +62,7 @@ const REDACTED_TICKETS = ["AL20101526"]; // Gina Wells
 // departure and arrival are named under the duration instead of stacking every
 // leg into the route row.
 const CONNECTION_AIRPORTS = {
-  AL102037886: ["DFW", "ORD"], // Gina Wells — BOI → DFW → ORD → FWA
+  AL102037886: ["DFW"], // Gina Wells — BOI → DFW → FWA
 };
 
 // ---------- Static Fallback ----------
