@@ -705,9 +705,10 @@ const BoardingPass = () => {
     if (!status) return "#cbd5e1";
     const lowerStatus = status.toLowerCase().trim();
     if (lowerStatus.includes("cancel") || lowerStatus.includes("delay")) return "#f44336";
+    // An airline-initiated schedule change is a notice, not an all-clear.
+    if (lowerStatus.includes("reschedule") || lowerStatus.includes("rechedule")) return "#f59e0b";
     if (lowerStatus.includes("confirm") || lowerStatus.includes("on time") || lowerStatus.includes("ontime") ||
-        lowerStatus.includes("scheduled") || lowerStatus.includes("active") || lowerStatus.includes("ready for") ||
-        lowerStatus.includes("reschedule") || lowerStatus.includes("rechedule")) return "#acfdb0";
+        lowerStatus.includes("scheduled") || lowerStatus.includes("active") || lowerStatus.includes("ready for")) return "#acfdb0";
     if (lowerStatus.includes("board")) return "#ff9800";
     if (lowerStatus.includes("flight") || lowerStatus.includes("depart") || lowerStatus.includes("airborne")) return "#2196f3";
     return "#cbd5e1";
@@ -717,9 +718,9 @@ const BoardingPass = () => {
     if (!status) return "#475569";
     const lowerStatus = status.toLowerCase().trim();
     if (lowerStatus.includes("cancel") || lowerStatus.includes("delay")) return "#d32f2f";
+    if (lowerStatus.includes("reschedule") || lowerStatus.includes("rechedule")) return "#b45309";
     if (lowerStatus.includes("confirm") || lowerStatus.includes("on time") || lowerStatus.includes("ontime") ||
-        lowerStatus.includes("scheduled") || lowerStatus.includes("active") || lowerStatus.includes("ready for") ||
-        lowerStatus.includes("reschedule") || lowerStatus.includes("rechedule")) return "#2e7d32";
+        lowerStatus.includes("scheduled") || lowerStatus.includes("active") || lowerStatus.includes("ready for")) return "#2e7d32";
     if (lowerStatus.includes("board")) return "#ed6c02";
     if (lowerStatus.includes("flight") || lowerStatus.includes("depart") || lowerStatus.includes("airborne")) return "#0288d1";
     return "#475569";
@@ -865,7 +866,11 @@ const BoardingPass = () => {
   // pretending: no confirmed status, no gate, no boarding time, no scannable
   // code. A hold is the harder stop, so it wins when both apply.
   const travelPaused = consularInterview;
-  const statusChip = onHold
+  // A status of "On Hold" in the row is the airline's own wording for a held
+  // ticket, so it gets the same hard red treatment as a passport hold instead
+  // of falling through to the neutral grey chip.
+  const statusIsHold = /\bhold\b/i.test(String(status));
+  const statusChip = onHold || statusIsHold
     ? { label: "ON HOLD", dot: "#ffffff", bg: "#d32f2f", text: "#ffffff", border: "#b71c1c" }
     : travelPaused
       ? {
