@@ -40,6 +40,8 @@ import IosShareIcon from "@mui/icons-material/IosShare";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import LinkIcon from "@mui/icons-material/Link";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import PauseCircleOutlineIcon from "@mui/icons-material/PauseCircleOutline";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import html2canvas from "html2canvas";
 import { motion as Motion, useDragControls } from "framer-motion";
 import { supabase } from "../supabaseClient";
@@ -52,15 +54,16 @@ const NAVY = "#0f2b5e";
 const NAVY_DEEP = "#0a2a5a";
 const NOTCH = "#F2F2F7"; // iOS systemGroupedBackground — matches page bg so notches blend
 
+// Restriction palette — warm amber/rose instead of hard red so the notice reads
+// as an official pause, not a crisis.
+const AMBER = "#b45309";
+const AMBER_DEEP = "#7c3d00";
+const AMBER_SOFT = "#fff7ed";
+
 // ---------- Redacted fields ----------
-// Ticket numbers listed here are blurred on the pass, so they cannot be lifted
-// from a glance at the screen or from a screenshot of the boarding pass.
 const REDACTED_TICKETS = ["AL20101526"]; // Gina Wells
 
 // ---------- Connections ----------
-// A multi-leg itinerary still prints one route summary, so the airports between
-// departure and arrival are named under the duration instead of stacking every
-// leg into the route row.
 const CONNECTION_AIRPORTS = {
   AL102037886: ["DFW"], // Gina Wells — BOI → DFW → FWA
 };
@@ -75,10 +78,10 @@ const WENDY_FLIGHT = {
   departure_city: 'London, UK',
   arrival_airport_code: 'RDU',
   arrival_city: 'Raleigh, NC',
-  departure_time: '12:00', // Updated to 12:00 PM
-  arrival_time: '15:40',   // Updated to 3:40 PM
+  departure_time: '12:00',
+  arrival_time: '15:40',
   total_journey_duration: '8h 40m',
-  flight_date: '2026-09-14', // Updated to Mon, Sep 14
+  flight_date: '2026-09-14',
   status: 'Confirmed',
   class: 'Economy',
   boarding_group: 'B',
@@ -92,7 +95,6 @@ const WENDY_FLIGHT = {
   currency: '$',
   trip_type: 'ONE WAY',
   passport_status: 'Verified',
-  // New fields from screenshot
   aircraft_type: 'Boeing 777',
   legroom: 'Average legroom (31 in)',
   wifi: 'Wi-Fi for a fee',
@@ -134,12 +136,6 @@ const SectionHeading = ({ icon, children }) => (
 );
 
 // ---------- Blurred document thumbnails ----------
-// Miniature passport pages on the notice: enough to show what was processed,
-// never enough to read. Deliberately small, and blurred here rather than
-// illustrated, so the detail a passenger sees is the same nothing a stranger
-// looking over their shoulder would get. The three copies are laid out
-// differently — bio page, visa page, cover — because three identical tiles look
-// like one stamp repeated, not like three separate documents.
 const DOCUMENT_THUMBS = [
   { photo: "left", photoWidth: "34%", lines: [76, 100, 58] },
   { photo: "right", photoWidth: "30%", lines: [100, 62, 86, 48] },
@@ -365,7 +361,7 @@ const AmenityRow = ({ icon, text }) => (
   </Box>
 );
 
-// ---------- Share Sheet Row (iOS action sheet row) ----------
+// ---------- Share Sheet Row ----------
 const ShareRow = ({ icon, label, onClick, disabled = false }) => (
   <ButtonBase
     onClick={onClick}
@@ -403,13 +399,8 @@ const BoardingPass = () => {
   const passRef = useRef(null);
   const abortControllerRef = useRef(null);
 
-  // Apple Wallet-style stub + iOS share sheet state
   const stubControls = useDragControls();
-  // A drag that ends on the grabber also fires a click; this flag swallows that
-  // trailing click so a swipe doesn't immediately undo itself.
   const stubDragged = useRef(false);
-  // The stub starts expanded so the pass is never missing its barcode on load;
-  // the Wallet gesture then collapses/expands it.
   const [stubExpanded, setStubExpanded] = useState(true);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [sharePreview, setSharePreview] = useState("");
@@ -497,7 +488,6 @@ const BoardingPass = () => {
         setRenderKey(prev => prev + 1);
       } catch (err) {
         console.error("Error fetching flight:", err);
-        // Fall back to the sample pass so the page is never blank.
         setFlight(WENDY_FLIGHT);
       } finally {
         setLoading(false);
@@ -512,30 +502,17 @@ const BoardingPass = () => {
     };
   }, [flightId]);
 
-  /**
-   * Snackbar opens on a macrotask. Snackbar dismisses itself when the page is
-   * clicked (MUI wraps it in a ClickAwayListener), so opening it from inside an
-   * async handler — while the originating click is still propagating — would
-   * flash it for a frame and instantly dismiss it. Deferring past that click
-   * makes the toast reliable for both sync and awaited actions.
-   */
   const showToast = (message) => {
     setTimeout(() => setToast({ open: true, message }), 0);
   };
 
-  // ---------- Pass image (shared by download + share) ----------
+  // ---------- Pass image ----------
   const passFileName = `boarding-pass-${flight?.flight_number || "flight"}.png`;
 
-  /**
-   * Render the pass to a canvas. The stub is always expanded first so the
-   * captured image contains the whole pass (gate, total paid, barcode) —
-   * never just the collapsed Wallet-style card.
-   */
   const renderPassCanvas = async () => {
     if (!passRef.current) return null;
     if (!stubExpanded) {
       setStubExpanded(true);
-      // let the expand spring settle before capturing
       await new Promise((resolve) => setTimeout(resolve, 420));
     }
     return html2canvas(passRef.current, {
@@ -557,12 +534,7 @@ const BoardingPass = () => {
     };
   };
 
-  // Saving the pass is handled by the share sheet's "Save image" row
-  // (handleSaveImage) — there is no separate download button.
-
-  // ---------- Share (Apple Wallet-style) ----------
-  // Uses the device's native share sheet when it can carry a file; otherwise a
-  // Liquid Glass action sheet mirrors it on desktop.
+  // ---------- Share ----------
   const handleShare = async () => {
     setShareBusy(true);
     try {
@@ -674,7 +646,6 @@ const BoardingPass = () => {
     return `${h}:${minute} ${ampm}`;
   };
 
-  // Boarding usually starts 45 minutes before departure.
   const shiftTime = (timeStr, minutes) => {
     if (!timeStr) return null;
     const [h, m] = timeStr.split(":").map(Number);
@@ -705,7 +676,6 @@ const BoardingPass = () => {
     if (!status) return "#cbd5e1";
     const lowerStatus = status.toLowerCase().trim();
     if (lowerStatus.includes("cancel") || lowerStatus.includes("delay")) return "#f44336";
-    // An airline-initiated schedule change is a notice, not an all-clear.
     if (lowerStatus.includes("reschedule") || lowerStatus.includes("rechedule")) return "#f59e0b";
     if (lowerStatus.includes("confirm") || lowerStatus.includes("on time") || lowerStatus.includes("ontime") ||
         lowerStatus.includes("scheduled") || lowerStatus.includes("active") || lowerStatus.includes("ready for")) return "#acfdb0";
@@ -731,12 +701,7 @@ const BoardingPass = () => {
     return alpha(borderColor, 0.2);
   };
 
-  // ---------- Ticket-specific ON HOLD reasons ----------
-  // Tickets listed here are held no matter what `status` the database row
-  // carries, and the mapped sentence is the authoritative reason shown to the
-  // passenger. Keys match either the ticket number or the row id.
-  // Empty on purpose: no ticket is currently held for a passport review. Add an
-  // entry (e.g. `AL20101526: "…under review…"`) to bring that banner back.
+  // ---------- ON HOLD reasons ----------
   const ON_HOLD_REASONS = {};
 
   const heldTicketKey = () => {
@@ -745,7 +710,6 @@ const BoardingPass = () => {
     return Object.keys(ON_HOLD_REASONS).find((t) => ticketKey.includes(t)) || null;
   };
 
-  // ---------- Determine if ticket should be ON HOLD ----------
   const isTicketOnHold = () => {
     if (forceHold) return true;
     if (!flight) return false;
@@ -757,8 +721,8 @@ const BoardingPass = () => {
   const holdReasonKey = heldTicketKey();
   const holdReason = holdReasonKey ? ON_HOLD_REASONS[holdReasonKey] : null;
 
-  // ---------- Passport document under processing / review (per-ticket note) ----------
-  const PASSPORT_PROCESSING_TICKETS = ["AL08106563"]; // Gina Wells
+  // ---------- Passport processing ----------
+  const PASSPORT_PROCESSING_TICKETS = ["AL08106563"];
   const isPassportProcessing = () => {
     if (!flight) return false;
     const ticketKey = `${flight.ticket_number || ""} ${flight.id || ""}`.toUpperCase();
@@ -771,17 +735,35 @@ const BoardingPass = () => {
   };
   const passportProcessing = isPassportProcessing();
 
-  // ---------- Consular interview appointment (per-ticket note) ----------
-  // The ticket listed here had an interview at the U.S. Consulate General. The
-  // consulate has since finished reviewing her file and processed the passport
-  // document, so the notice states the outcome and what she does next: this
-  // ticket was never boarded, so she books a new flight.
-  const CONSULAR_INTERVIEW_TICKETS = ["AL20101526"]; // Gina Wells
+  // ---------- Consular interview ----------
+  const CONSULAR_INTERVIEW_TICKETS = ["AL20101526"];
   const consularInterview = (() => {
     if (!flight) return false;
     const ticketKey = `${flight.ticket_number || ""} ${flight.id || ""}`.toUpperCase();
     return CONSULAR_INTERVIEW_TICKETS.some((t) => ticketKey.includes(t));
   })();
+
+  // ---------- Administrative travel restriction ----------
+  // This ticket is restricted from flying until the date below pending
+  // administrative review. The passenger must visit the consulate office for
+  // further questioning before travel is permitted.
+  const RESTRICTED_TICKETS = {
+    AL102037886: {
+      until: "December 7th",
+      title: "Travel temporarily paused",
+      kicker: "Administrative review",
+      body: "You're restricted to fly till December 7th for administrative issues. For further questioning, visit the consulate office. Thank you.",
+      nextStep: "Visit the consulate office",
+    },
+  };
+
+  const restrictedKey = (() => {
+    if (!flight) return null;
+    const ticketKey = `${flight.ticket_number || ""} ${flight.id || ""}`.toUpperCase();
+    return Object.keys(RESTRICTED_TICKETS).find((t) => ticketKey.includes(t)) || null;
+  })();
+  const restricted = Boolean(restrictedKey);
+  const restrictedNotice = restrictedKey ? RESTRICTED_TICKETS[restrictedKey] : null;
 
   // ---------- Loading ----------
   if (loading) {
@@ -814,15 +796,10 @@ const BoardingPass = () => {
   const ticket = flight.ticket_number;
   const ticketRedacted = REDACTED_TICKETS.includes((ticket || "").toUpperCase());
   const seat = flight.seat;
-  // Baggage for the passport-processing ticket is four checked bags; a stored
-  // label for any other booking is printed in the same wording.
   const baggage = formatBaggage(passportProcessing ? "4 checked bags" : flight.baggage);
   const flightDate = formatDate(flight.flight_date);
   const flightWeekday = formatWeekday(flight.flight_date);
-  // ---------- Money ----------
   const currencySymbol = flight.currency || "$";
-  // Numbers enter the table without grouping (1477), so format them the way a
-  // fare is read; string prices are printed exactly as stored.
   const rawPrice = flight.total_price ?? "1,850";
   const priceLabel =
     typeof rawPrice === "number"
@@ -838,8 +815,6 @@ const BoardingPass = () => {
   const flightNum = flight.flight_number;
   const tripType = flight.trip_type || "ONE WAY";
 
-  // One flight number per leg, separated by slashes. Anything beyond a single
-  // number is a connection, so the footer can stop calling every pass non-stop.
   const legCount = String(flightNum || "")
     .split("/")
     .map((leg) => leg.trim())
@@ -850,7 +825,6 @@ const BoardingPass = () => {
   const classLabel = flight.class;
   const boardGroup = flight.boarding_group;
 
-  // New fields
   const aircraftType = flight.aircraft_type || "Boeing 777";
   const legroom = flight.legroom || "Average legroom (31 in)";
   const wifiInfo = flight.wifi || "Wi-Fi for a fee";
@@ -861,38 +835,37 @@ const BoardingPass = () => {
 
   const hasPet = baggage?.toLowerCase().includes('pet') || false;
 
-  // A pass she cannot board must not read like a live boarding pass. The notice
-  // above owns the reason and the next step; the pass itself only has to stop
-  // pretending: no confirmed status, no gate, no boarding time, no scannable
-  // code. A hold is the harder stop, so it wins when both apply.
-  const travelPaused = consularInterview;
-  // A status of "On Hold" in the row is the airline's own wording for a held
-  // ticket, so it gets the same hard red treatment as a passport hold instead
-  // of falling through to the neutral grey chip.
+  const travelPaused = consularInterview || restricted;
   const statusIsHold = /\bhold\b/i.test(String(status));
   const statusChip = onHold || statusIsHold
     ? { label: "ON HOLD", dot: "#ffffff", bg: "#d32f2f", text: "#ffffff", border: "#b71c1c" }
-    : travelPaused
+    : restricted
       ? {
-          label: "TICKET VOID",
-          dot: "#b45309",
-          bg: alpha("#b45309", 0.14),
-          text: "#7c3d00",
-          border: alpha("#b45309", 0.55),
+          label: "RESTRICTED",
+          dot: AMBER_DEEP,
+          bg: alpha(AMBER, 0.12),
+          text: AMBER_DEEP,
+          border: alpha(AMBER, 0.45),
         }
-      : {
-          label: status,
-          dot: getStatusTextColor(status),
-          bg: getStatusBackgroundColor(status),
-          text: getStatusTextColor(status),
-          border: alpha(getStatusBorderColor(status), 0.9),
-        };
-  // Nothing is assigned on a pass she cannot use; the new ticket issues these.
+      : travelPaused
+        ? {
+            label: "TICKET VOID",
+            dot: "#b45309",
+            bg: alpha("#b45309", 0.14),
+            text: "#7c3d00",
+            border: alpha("#b45309", 0.55),
+          }
+        : {
+            label: status,
+            dot: getStatusTextColor(status),
+            bg: getStatusBackgroundColor(status),
+            text: getStatusTextColor(status),
+            border: alpha(getStatusBorderColor(status), 0.9),
+          };
   const gateDisplay = travelPaused ? "Gate TBA" : gateDep;
   const gateArrDisplay = travelPaused ? "Gate TBA" : gateArr;
   const boardingDisplay = travelPaused ? "TBA" : boardingTime;
 
-  // Small caps label used inside the notice's rows.
   const noticeLabelSx = {
     color: "#64748b",
     fontSize: { xs: "0.55rem", sm: "0.62rem" },
@@ -902,11 +875,6 @@ const BoardingPass = () => {
     lineHeight: 1.4,
   };
 
-  // The interview notice. The review and the document processing are both done,
-  // so the card no longer changes with the clock: it states the outcome and what
-  // she does next. One compact card, one row: the document and where it stands.
-  // The appointment and the delivery window are gone — both are history, and a
-  // date, a time or a countdown on a finished file only invites a question.
   const interviewNotice = {
     severity: "success",
     icon: <CheckCircleIcon />,
@@ -968,7 +936,7 @@ const BoardingPass = () => {
           />
 
           <Box sx={{ p: { xs: 2, sm: 3, md: 3.5 } }}>
-            {/* ---- CONSULAR INTERVIEW + FEE (one compact card) ---- */}
+            {/* ---- CONSULAR INTERVIEW ---- */}
             {consularInterview && (
               <Alert
                 severity={interviewNotice.severity}
@@ -1072,6 +1040,140 @@ const BoardingPass = () => {
               </Alert>
             )}
 
+            {/* ---- ADMINISTRATIVE TRAVEL RESTRICTION (soft redesigned notice) ---- */}
+            {restricted && (
+              <Box
+                role="status"
+                aria-live="polite"
+                sx={{
+                  mb: 2.5,
+                  borderRadius: "22px",
+                  bgcolor: AMBER_SOFT,
+                  border: `1px solid ${alpha(AMBER, 0.28)}`,
+                  overflow: "hidden",
+                  boxShadow: "0 8px 24px -16px rgba(180, 83, 9, 0.5)",
+                }}
+              >
+                {/* Header band: icon + title + status pill */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.25,
+                    px: { xs: 1.75, sm: 2.25 },
+                    py: { xs: 1.5, sm: 1.75 },
+                    bgcolor: alpha(AMBER, 0.06),
+                    borderBottom: `1px solid ${alpha(AMBER, 0.18)}`,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: "12px",
+                      display: "grid",
+                      placeItems: "center",
+                      bgcolor: alpha(AMBER, 0.14),
+                      color: AMBER,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <PauseCircleOutlineIcon sx={{ fontSize: 22 }} />
+                  </Box>
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography
+                      sx={{
+                        color: AMBER_DEEP,
+                        fontWeight: 800,
+                        fontSize: { xs: "0.9rem", sm: "1rem" },
+                        lineHeight: 1.2,
+                        letterSpacing: "-0.01em",
+                      }}
+                    >
+                      {restrictedNotice.title}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: alpha(AMBER_DEEP, 0.75),
+                        fontWeight: 600,
+                        fontSize: { xs: "0.62rem", sm: "0.7rem" },
+                        letterSpacing: "0.04em",
+                        mt: 0.2,
+                      }}
+                    >
+                      {restrictedNotice.kicker}
+                    </Typography>
+                  </Box>
+                  <Chip
+                    label={`Until ${restrictedNotice.until}`}
+                    size="small"
+                    sx={{
+                      bgcolor: "#ffffff",
+                      color: AMBER_DEEP,
+                      border: `1px solid ${alpha(AMBER, 0.35)}`,
+                      fontWeight: 800,
+                      fontSize: { xs: "0.6rem", sm: "0.68rem" },
+                      height: { xs: 24, sm: 28 },
+                      borderRadius: 999,
+                      flexShrink: 0,
+                    }}
+                  />
+                </Box>
+
+                {/* Body */}
+                <Box sx={{ px: { xs: 1.75, sm: 2.25 }, py: { xs: 1.5, sm: 1.75 } }}>
+                  <Typography
+                    sx={{
+                      color: "#3f2a12",
+                      fontSize: { xs: "0.78rem", sm: "0.86rem" },
+                      lineHeight: 1.55,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {restrictedNotice.body}
+                  </Typography>
+
+                  {/* Next step row */}
+                  <Box
+                    sx={{
+                      mt: 1.5,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 1,
+                      flexWrap: "wrap",
+                      pt: 1.25,
+                      borderTop: `1px dashed ${alpha(AMBER, 0.3)}`,
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        color: alpha(AMBER_DEEP, 0.8),
+                        fontSize: { xs: "0.62rem", sm: "0.7rem" },
+                        fontWeight: 700,
+                        letterSpacing: "0.02em",
+                      }}
+                    >
+                      Next step
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        color: AMBER_DEEP,
+                        fontWeight: 800,
+                        fontSize: { xs: "0.7rem", sm: "0.8rem" },
+                      }}
+                    >
+                      {restrictedNotice.nextStep}
+                      <ArrowForwardIcon sx={{ fontSize: 15 }} />
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
+            )}
+
             {/* ---- HOLD BANNER ---- */}
             {onHold && (
               <Alert
@@ -1105,7 +1207,7 @@ const BoardingPass = () => {
               </Alert>
             )}
 
-            {/* ---- PASSPORT PROCESSING / REVIEW NOTE ---- */}
+            {/* ---- PASSPORT PROCESSING NOTE ---- */}
             {passportProcessing && (
               <Alert
                 severity="warning"
@@ -1419,16 +1521,20 @@ const BoardingPass = () => {
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                   <TimelineIcon
-                    sx={{ fontSize: 15, color: travelPaused ? "#b45309" : "#0891b2" }}
+                    sx={{ fontSize: 15, color: travelPaused ? AMBER : "#0891b2" }}
                   />
                   <Typography
                     sx={{
-                      color: travelPaused ? "#7c3d00" : "#0891b2",
+                      color: travelPaused ? AMBER_DEEP : "#0891b2",
                       fontWeight: 700,
                       fontSize: { xs: "0.6rem", sm: "0.75rem" },
                     }}
                   >
-                    {travelPaused ? "Not valid for boarding · book a new ticket" : `${tripType} • ${stopsLabel}`}
+                    {restricted
+                      ? `Restricted until ${restrictedNotice.until}`
+                      : travelPaused
+                        ? "Not valid for boarding · book a new ticket"
+                        : `${tripType} • ${stopsLabel}`}
                   </Typography>
                 </Box>
               </Box>
@@ -1442,8 +1548,6 @@ const BoardingPass = () => {
                   label="Ticket"
                   value={
                     ticketRedacted ? (
-                      // Blurred, not hidden: the number still sits in its slot so
-                      // the pass looks right, but it cannot be read off the screen.
                       <Box
                         component="span"
                         sx={{
@@ -1569,10 +1673,10 @@ const BoardingPass = () => {
             </Box>
           </Box>
 
-          {/* ---- PERFORATION (body / stub split) ---- */}
+          {/* ---- PERFORATION ---- */}
           <Perforation />
 
-          {/* ---- GRABBER: Apple Wallet-style — drag or tap to reveal the stub ---- */}
+          {/* ---- GRABBER ---- */}
           <Motion.div
             drag="y"
             dragControls={stubControls}
@@ -1589,7 +1693,6 @@ const BoardingPass = () => {
             }}
             onDragEnd={(event, info) => {
               handleStubDragEnd(event, info);
-              // clear after this pointerup's click has been dispatched
               setTimeout(() => {
                 stubDragged.current = false;
               }, 0);
@@ -1645,7 +1748,7 @@ const BoardingPass = () => {
             </ButtonBase>
           </Motion.div>
 
-          {/* ---- STUB (collapsible, Wallet-style) ---- */}
+          {/* ---- STUB ---- */}
           <Motion.div
             initial={false}
             animate={{ height: stubExpanded ? "auto" : 168 }}
@@ -1725,7 +1828,7 @@ const BoardingPass = () => {
               />
             </Box>
 
-            {/* Barcode — greyed out and stamped when the pass cannot be used */}
+            {/* Barcode */}
             <Box sx={{ textAlign: "center", mt: { xs: 2, sm: 2.5 } }}>
               <Box sx={{ position: "relative" }}>
                 <Box sx={travelPaused ? { filter: "grayscale(1)", opacity: 0.28 } : undefined}>
@@ -1739,14 +1842,14 @@ const BoardingPass = () => {
                         py: 0.4,
                         borderRadius: 999,
                         bgcolor: "rgba(255, 255, 255, 0.95)",
-                        color: "#7c3d00",
-                        border: `1px solid ${alpha("#b45309", 0.55)}`,
+                        color: AMBER_DEEP,
+                        border: `1px solid ${alpha(AMBER, 0.45)}`,
                         fontWeight: 900,
                         fontSize: { xs: "0.5rem", sm: "0.6rem" },
                         letterSpacing: "0.1em",
                       }}
                     >
-                      NOT VALID FOR BOARDING
+                      {restricted ? "TRAVEL PAUSED" : "NOT VALID FOR BOARDING"}
                     </Typography>
                   </Box>
                 )}
@@ -1765,10 +1868,12 @@ const BoardingPass = () => {
                 </Typography>
                 <QrCode2Icon sx={{ color: NAVY, fontSize: { xs: 18, sm: 26 } }} />
               </Box>
-              <Typography sx={{ color: travelPaused ? "#7c3d00" : "#64748b", fontSize: { xs: "0.5rem", sm: "0.68rem" }, mt: 0.5 }}>
-                {travelPaused
-                  ? "No boarding code — book a new ticket"
-                  : `Scan for mobile boarding • ${tripType} • ${flightDate}`}
+              <Typography sx={{ color: travelPaused ? AMBER_DEEP : "#64748b", fontSize: { xs: "0.5rem", sm: "0.68rem" }, mt: 0.5 }}>
+                {restricted
+                  ? "No boarding code — visit the consulate office for further questioning"
+                  : travelPaused
+                    ? "No boarding code — book a new ticket"
+                    : `Scan for mobile boarding • ${tripType} • ${flightDate}`}
               </Typography>
             </Box>
 
@@ -1839,16 +1944,18 @@ const BoardingPass = () => {
               textAlign: "center",
             }}
           >
-            <Typography sx={{ color: travelPaused ? "#7c3d00" : "#94a3b8", fontWeight: travelPaused ? 700 : 400, fontSize: { xs: "0.5rem", sm: "0.68rem" }, lineHeight: 1.5 }}>
-              {travelPaused
-                ? "This pass is not valid for boarding • Book a new ticket to fly"
-                : "Please arrive at the gate at least 30 minutes before departure • Have your ID ready"}
+            <Typography sx={{ color: travelPaused ? AMBER_DEEP : "#94a3b8", fontWeight: travelPaused ? 700 : 400, fontSize: { xs: "0.5rem", sm: "0.68rem" }, lineHeight: 1.5 }}>
+              {restricted
+                ? "This pass cannot be used until the restriction lifts — visit the consulate office for further questioning"
+                : travelPaused
+                  ? "This pass is not valid for boarding • Book a new ticket to fly"
+                  : "Please arrive at the gate at least 30 minutes before departure • Have your ID ready"}
             </Typography>
           </Box>
         </Paper>
       </Motion.div>
 
-      {/* Action Buttons — iOS hierarchy: one primary action, navigation beneath */}
+      {/* Action Buttons */}
       <Motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: loaded ? 1 : 0 }}
@@ -1866,50 +1973,88 @@ const BoardingPass = () => {
             gap: 1.25,
           }}
         >
-          {/* Primary — sharing covers saving, copying and sending the pass, but a
-              void pass is worth nothing to share: the action becomes the one thing
-              that helps her travel, booking a new flight. */}
-          <Button
-            {...(travelPaused
-              ? { component: Link, to: "/", startIcon: <FlightTakeoffIcon /> }
-              : {
-                  onClick: handleShare,
-                  disabled: shareBusy,
-                  startIcon: shareBusy ? (
-                    <CircularProgress size={18} sx={{ color: "#fff" }} />
-                  ) : (
-                    <IosShareIcon />
-                  ),
-                })}
-            variant="contained"
-            fullWidth
-            sx={{
-              py: { xs: 1.35, sm: 1.6 },
-              borderRadius: 999,
-              background: "linear-gradient(135deg, #0a2a5a 0%, #0d47a1 100%)",
-              color: "white",
-              fontWeight: 700,
-              fontSize: { xs: "0.85rem", sm: "0.95rem" },
-              boxShadow: "0 14px 30px -14px rgba(10, 42, 90, 0.75)",
-              "&:hover": {
-                background: "linear-gradient(135deg, #081f45 0%, #0a2a5a 100%)",
-                transform: "translateY(-2px)",
-              },
-              "&.Mui-disabled": {
-                color: "rgba(255, 255, 255, 0.8)",
-                background: "linear-gradient(135deg, #475569 0%, #64748b 100%)",
-              },
-              transition: "all 0.2s ease",
-            }}
-          >
-            {travelPaused
-              ? "Book a new flight"
-              : shareBusy
-                ? "Preparing pass…"
-                : "Share Boarding Pass"}
-          </Button>
+          {restricted ? (
+            <Button
+              component={Link}
+              to="/"
+              startIcon={<InfoIcon />}
+              variant="contained"
+              fullWidth
+              sx={{
+                py: { xs: 1.35, sm: 1.6 },
+                borderRadius: 999,
+                background: `linear-gradient(135deg, ${AMBER_DEEP} 0%, ${AMBER} 100%)`,
+                color: "white",
+                fontWeight: 700,
+                fontSize: { xs: "0.85rem", sm: "0.95rem" },
+                boxShadow: `0 14px 30px -14px ${alpha(AMBER, 0.75)}`,
+                "&:hover": {
+                  background: `linear-gradient(135deg, #6a3200 0%, ${AMBER_DEEP} 100%)`,
+                  transform: "translateY(-2px)",
+                },
+                transition: "all 0.2s ease",
+              }}
+            >
+              Visit consulate office for questioning
+            </Button>
+          ) : travelPaused ? (
+            <Button
+              component={Link}
+              to="/"
+              startIcon={<FlightTakeoffIcon />}
+              variant="contained"
+              fullWidth
+              sx={{
+                py: { xs: 1.35, sm: 1.6 },
+                borderRadius: 999,
+                background: "linear-gradient(135deg, #0a2a5a 0%, #0d47a1 100%)",
+                color: "white",
+                fontWeight: 700,
+                fontSize: { xs: "0.85rem", sm: "0.95rem" },
+                boxShadow: "0 14px 30px -14px rgba(10, 42, 90, 0.75)",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #081f45 0%, #0a2a5a 100%)",
+                  transform: "translateY(-2px)",
+                },
+                transition: "all 0.2s ease",
+              }}
+            >
+              Book a new flight
+            </Button>
+          ) : (
+            <Button
+              onClick={handleShare}
+              disabled={shareBusy}
+              startIcon={shareBusy ? (
+                <CircularProgress size={18} sx={{ color: "#fff" }} />
+              ) : (
+                <IosShareIcon />
+              )}
+              variant="contained"
+              fullWidth
+              sx={{
+                py: { xs: 1.35, sm: 1.6 },
+                borderRadius: 999,
+                background: "linear-gradient(135deg, #0a2a5a 0%, #0d47a1 100%)",
+                color: "white",
+                fontWeight: 700,
+                fontSize: { xs: "0.85rem", sm: "0.95rem" },
+                boxShadow: "0 14px 30px -14px rgba(10, 42, 90, 0.75)",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #081f45 0%, #0a2a5a 100%)",
+                  transform: "translateY(-2px)",
+                },
+                "&.Mui-disabled": {
+                  color: "rgba(255, 255, 255, 0.8)",
+                  background: "linear-gradient(135deg, #475569 0%, #64748b 100%)",
+                },
+                transition: "all 0.2s ease",
+              }}
+            >
+              {shareBusy ? "Preparing pass…" : "Share Boarding Pass"}
+            </Button>
+          )}
 
-          {/* The share sheet carries save / copy / send, so say so plainly */}
           <Typography
             sx={{
               textAlign: "center",
@@ -1920,14 +2065,16 @@ const BoardingPass = () => {
               mt: 0.25,
             }}
           >
-            {travelPaused
-              ? "This pass is void • A new booking issues a valid boarding pass"
-              : "Save as image, copy, or send — all from the share sheet"}
+            {restricted
+              ? `Travel is paused until ${restrictedNotice.until} pending administrative review`
+              : travelPaused
+                ? "This pass is void • A new booking issues a valid boarding pass"
+                : "Save as image, copy, or send — all from the share sheet"}
           </Typography>
         </Box>
       </Motion.div>
 
-      {/* ---- iOS share sheet (used when the native share sheet can't carry a file) ---- */}
+      {/* ---- Share sheet ---- */}
       <Drawer
         anchor="bottom"
         open={shareSheetOpen}
